@@ -1,0 +1,132 @@
+name: Build Nexus OS ISO
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y debootstrap xorriso squashfs-tools \
+            grub-pc-bin grub-efi-amd64-bin mtools dosfstools
+
+      - name: Bootstrap Ubuntu rootfs
+        run: |
+          sudo debootstrap --arch=amd64 --variant=minbase noble rootfs \
+            http://archive.ubuntu.com/ubuntu/
+
+      - name: Configure apt sources
+        run: |
+          sudo tee rootfs/etc/apt/sources.list << EOF
+          deb http://archive.ubuntu.com/ubuntu noble main restricted universe
+          deb http://archive.ubuntu.com/ubuntu noble-updates main restricted universe
+          deb http://security.ubuntu.com/ubuntu noble-security main restricted universe
+          EOF
+
+      - name: Install packages into rootfs
+        run: |
+          sudo mount --bind /proc rootfs/proc
+          sudo mount --bind /sys  rootfs/sys
+          sudo mount --bind /dev  rootfs/dev
+          sudo chroot rootfs /bin/bash -c "
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              linux-image-generic initramfs-tools \
+              python3 python3-pip python3-requests \
+              bash coreutils systemd systemd-sysv \
+              util-linux procps psmisc \
+              iproute2 iputils-ping \
+              vim nano curl wget \
+              ca-certificates
+          "
+          sudo umount rootfs/proc rootfs/sys rootfs/dev
+
+      - name: Install Nexus AI Agent
+        run: |
+          sudo cp nexus-agent.py rootfs/usr/local/bin/nexus-agent.py
+          sudo chmod +x rootfs/usr/local/bin/nexus-agent.py
+          sudo mkdir -p rootfs/etc/nexus
+
+      - name: Configure system identity
+        run: |
+          echo "nexus" | sudo tee rootfs/etc/hostname
+          sudo tee rootfs/etc/os-release << EOF
+          NAME="Nexus OS"
+          VERSION="1.0"
+          PRETTY_NAME="Nexus OS 1.0 Agentic AI Linux"
+          EOF
+          # Set root auto-login
+          sudo mkdir -p rootfs/etc/systemd/system/getty@tty1.service.d
+          sudo tee rootfs/etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
+          [Service]
+          ExecStart=
+          ExecStart=-/sbin/agetty --autologin root --noclear %I \$TERM
+          EOF
+          # Auto-launch nexus on login
+          echo "if [ \$(tty) = /dev/tty1 ]; then exec /usr/local/bin/nexus; fi" \
+            | sudo tee rootfs/root/.bash_profile
+          # Nexus launcher
+          sudo tee rootfs/usr/local/bin/nexus << LAUNCHER
+          #!/bin/bash
+          export TERM=linux
+          [ -f /etc/nexus/api.key ] && export ANTHROPIC_API_KEY=\$(cat /etc/nexus/api.key)
+          exec /usr/local/bin/nexus-agent.py
+          LAUNCHER
+          sudo chmod +x rootfs/usr/local/bin/nexus
+
+      - name: Create ISO structure
+        run: |
+          mkdir -p iso/{boot/grub,EFI/boot,live}
+          KVER=$(ls rootfs/boot/vmlinuz-* | head -1 | sed 's/.*vmlinuz-//')
+          sudo cp rootfs/boot/vmlinuz-$KVER iso/boot/vmlinuz
+          sudo cp rootfs/boot/initrd.img-$KVER iso/boot/initrd.img
+          cp boot/grub/grub.cfg iso/boot/grub/grub.cfg
+
+      - name: Create squashfs root filesystem
+        run: |
+          sudo mksquashfs rootfs iso/live/filesystem.squashfs \
+            -comp zstd -Xcompression-level 3 -e boot -noappend
+
+      - name: Create GRUB bootloaders
+        run: |
+          grub-mkstandalone --format=x86_64-efi --output=iso/EFI/boot/bootx64.efi \
+            --locales="" --fonts="" "boot/grub/grub.cfg=iso/boot/grub/grub.cfg"
+          grub-mkstandalone --format=i386-pc --output=core.img \
+            --install-modules="linux normal iso9660 biosdisk memdisk search tar ls" \
+            --modules="linux normal iso9660 biosdisk search" \
+            --locales="" --fonts="" "boot/grub/grub.cfg=iso/boot/grub/grub.cfg"
+          cat /usr/lib/grub/i386-pc/cdboot.img core.img > bios.img
+          dd if=/dev/zero of=efiboot.img bs=1M count=4 status=none
+          mkfs.fat -F12 efiboot.img
+          mmd -i efiboot.img ::/EFI ::/EFI/boot
+          mcopy -i efiboot.img iso/EFI/boot/bootx64.efi ::/EFI/boot/
+          cp bios.img efiboot.img iso/
+
+      - name: Build nexus.iso
+        run: |
+          xorriso -as mkisofs -iso-level 3 -volid "NEXUS_OS_1_0" \
+            -appid "Nexus OS 1.0 Agentic AI Linux" \
+            -b bios.img -no-emul-boot -boot-load-size 4 -boot-info-table \
+            --efi-boot efiboot.img -efi-boot-part --efi-boot-image \
+            --protective-msdos-label \
+            -append_partition 2 0xef efiboot.img \
+            -o nexus.iso iso
+          ls -lh nexus.iso
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0
+          name: Nexus OS v1.0
+          files: nexus.iso
+          token: ${{ secrets.GITHUB_TOKEN }}
