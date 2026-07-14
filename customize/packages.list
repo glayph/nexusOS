@@ -1,0 +1,33 @@
+# ============================================================
+#  NEXUS OS — Extra Packages List
+#  এখানে তোমার দরকারি packages যোগ করো
+#  Build করার সময় এগুলো automatically install হবে
+# ============================================================
+
+# System tools (examples — uncomment করো যেটা লাগবে)
+# htop
+# neofetch
+# tree
+# tmux
+# zip unzip
+
+# Network tools
+# nmap
+# tcpdump
+# netcat-openbsd
+
+# Development
+# git
+# build-essential
+# python3-numpy
+# python3-pandas
+# nodejs
+# npm
+
+# Docker
+# docker.io
+# docker-compose
+
+# AI/ML (heavy — build time বাড়বে)
+# python3-sklearn
+# jupyter
