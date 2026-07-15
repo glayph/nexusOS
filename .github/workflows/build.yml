@@ -3,11 +3,7 @@ name: Build Nexus OS ISO
 on:
   push:
     branches: [main]
-    paths:
-      - 'nexus-agent.py'
-      - 'boot/**'
-      - 'customize/**'
-      - 'makebuild.sh'
+    paths: [nexus-agent.py, boot/**, customize/**, makebuild.sh]
   workflow_dispatch:
 
 permissions:
@@ -26,7 +22,7 @@ jobs:
         run: sudo bash install-deps.sh
 
       - name: Build nexus.iso
-        run: sudo bash makebuild.sh --output ${{ github.workspace }}
+        run: sudo bash makebuild.sh
 
       - name: Show ISO info
         run: |
@@ -37,32 +33,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0
-          name: "Nexus OS v1.0 — Agentic AI Linux"
+          name: "Nexus OS v1.0"
           body: |
-            ## 🚀 Nexus OS v1.0
-
-            ### Download
-            Download **`nexus.iso`** below ↓
-
-            ### Quick Start
-            ```bash
-            # Flash to USB
-            dd if=nexus.iso of=/dev/sdX bs=4M status=progress
-
-            # Or test in QEMU
-            qemu-system-x86_64 -m 2048 -cdrom nexus.iso -boot d -enable-kvm
-
-            # After boot — set your Anthropic API key
-            echo "sk-ant-..." > /etc/nexus/api.key
-            ```
-
-            ### Specs
-            | Item | Detail |
-            |---|---|
-            | Base | Ubuntu 24.04 Noble |
-            | Kernel | Linux 6.8.x |
-            | Boot | BIOS + UEFI |
-            | AI Agent | Anthropic claude-sonnet-4-6 |
+            Download nexus.iso below and flash to USB or boot in a VM.
+            Flash: sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress
+            API key: echo "sk-ant-..." > /etc/nexus/api.key
           files: |
             nexus.iso
             SHA256SUMS
