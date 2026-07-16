@@ -40,6 +40,7 @@ if [[ $PKG_MGR == "apt-get" ]]; then
     squashfs-tools \
     grub-pc-bin \
     grub-efi-amd64-bin \
+    grub-common \
     mtools \
     dosfstools \
     python3 \
@@ -67,7 +68,7 @@ elif [[ $PKG_MGR == "dnf" ]]; then
 fi
 
 echo -e "${C}[3/3]${N} Verifying tools..."
-TOOLS=(debootstrap xorriso mksquashfs grub-mkstandalone mkfs.fat python3)
+TOOLS=(debootstrap xorriso mksquashfs grub-mkrescue grub-mkstandalone mkfs.fat python3)
 ALL_OK=true
 for t in "${TOOLS[@]}"; do
   if command -v $t &>/dev/null; then
