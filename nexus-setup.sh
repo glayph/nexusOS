@@ -1,9 +1,10 @@
 #!/bin/bash
+set -e
 
 C=$(printf '\033[96m'); G=$(printf '\033[92m'); Y=$(printf '\033[93m')
 R=$(printf '\033[91m'); B=$(printf '\033[1m'); D=$(printf '\033[2m')
 N=$(printf '\033[0m')
-A_ERR=0; A_GUI=0; A_DM=""; A_USER=""
+A_GUI=0; A_DM=""; A_USER=""
 
 PRE_INSTALLED="alsa-utils pulseaudio wireless-tools wpasupplicant iw bluez bluez-tools"
 
@@ -262,6 +263,7 @@ install_all() {
   echo "nexus:nexus" | chpasswd
   A_GUI=1; A_DM="lightdm"; A_USER="nexus"
   run systemctl enable lightdm 2>&1
+  persistence_setup
 
   msg "All Done" "Reboot to use full desktop."
   if yesno "Reboot?" "Reboot now?"; then reboot; fi

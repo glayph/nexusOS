@@ -3,7 +3,7 @@ name: Build Nexus OS ISO
 on:
   push:
     branches: [main]
-    paths: [nexus-agent.py, boot/**, customize/**, makebuild.sh]
+    paths: [boot/**, customize/**, makebuild.sh]
   workflow_dispatch:
 
 permissions:
