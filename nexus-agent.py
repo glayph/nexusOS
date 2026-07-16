@@ -1,29 +1,17 @@
 #!/usr/bin/env python3
-"""
-NEXUS — Agentic AI Linux Distribution Brain
-Core AI Agent powered by Anthropic Claude
-"""
 
 import os, sys, re, json, time, subprocess, socket, platform
 from datetime import datetime
 
-# ── ANSI colours ──────────────────────────────────────────────────────────────
-CYAN  = "\033[96m"; GREEN  = "\033[92m"; YELLOW = "\033[93m"
-RED   = "\033[91m"; BLUE   = "\033[94m"; BOLD   = "\033[1m"
-DIM   = "\033[2m";  RESET  = "\033[0m"
+C  = "\033[96m"; G = "\033[92m"; Y = "\033[93m"
+R  = "\033[91m"; B = "\033[1m";  D = "\033[2m"
+N  = "\033[0m"
 
-BANNER = f"""
-{CYAN}{BOLD}
-███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗  ██████╗ ███████╗
-████╗  ██║██╔════╝╚██╗██╔╝██║   ██║██╔════╝ ██╔═══██╗██╔════╝
-██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗ ██║   ██║███████╗
-██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║ ██║   ██║╚════██║
-██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║ ╚██████╔╝███████║
-╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝  ╚═════╝ ╚══════╝
-{RESET}{GREEN}  Agentic AI Linux — Brain v1.0   |   Powered by Anthropic Claude{RESET}
-"""
+BANNER = (
+    f"\n  {C}nexus  •  Agentic AI Linux  •  Anthropic Claude{N}\n"
+    f"  {D}{'─'*50}{N}\n"
+)
 
-# ── System prompt ──────────────────────────────────────────────────────────────
 DEFAULT_PROMPT = """You are NEXUS — the intelligent brain of a custom Agentic AI Linux distribution.
 
 Your capabilities:
@@ -46,7 +34,6 @@ Rules:
 - Support both English and Bengali input"""
 
 def load_custom_prompt():
-    """Load custom agent prompt if it exists"""
     for path in ["/etc/nexus/agent-prompt.txt",
                  os.path.expanduser("~/.nexus/agent-prompt.txt")]:
         try:
@@ -56,7 +43,6 @@ def load_custom_prompt():
             pass
     return DEFAULT_PROMPT
 
-# ── API key resolution ─────────────────────────────────────────────────────────
 def get_api_key():
     sources = [
         os.environ.get("ANTHROPIC_API_KEY"),
@@ -70,27 +56,20 @@ def get_api_key():
             pass
     return next((k for k in sources if k and k.startswith("sk-")), None)
 
-# ── System telemetry ───────────────────────────────────────────────────────────
 def get_sysinfo():
     info = {}
     try:
-        # Uptime
         with open("/proc/uptime") as f:
             s = float(f.read().split()[0])
             info["uptime"] = f"{int(s//3600)}h {int((s%3600)//60)}m"
-        # Load
         with open("/proc/loadavg") as f:
             info["load"] = " ".join(f.read().split()[:3])
-        # Memory
         mem = subprocess.run(["free", "-h"], capture_output=True, text=True)
         info["memory"] = mem.stdout.split("\n")[1] if mem.stdout else "?"
-        # Disk
         disk = subprocess.run(["df", "-h", "/"], capture_output=True, text=True)
         info["disk"] = disk.stdout.split("\n")[1] if disk.stdout else "?"
-        # Hostname / kernel
         info["hostname"] = socket.gethostname()
         info["kernel"]   = platform.release()
-        # IP
         ip = subprocess.run(["hostname", "-I"], capture_output=True, text=True)
         info["ip"] = ip.stdout.strip().split()[0] if ip.stdout.strip() else "no IP"
     except Exception as e:
@@ -99,24 +78,30 @@ def get_sysinfo():
 
 def print_sysinfo():
     i = get_sysinfo()
-    print(f"\n{DIM}  Host  : {i.get('hostname','?')}   |   Kernel : {i.get('kernel','?')}")
-    print(f"  IP    : {i.get('ip','?')}   |   Uptime : {i.get('uptime','?')}")
-    print(f"  Load  : {i.get('load','?')}")
-    print(f"  Mem   : {i.get('memory','?')}")
-    print(f"  Disk  : {i.get('disk','?')}{RESET}\n")
+    mem_parts = i.get('memory', '').split()
+    mem_str = f"{mem_parts[2]}/{mem_parts[1]}" if len(mem_parts) >= 3 else i.get('memory', '?')
+    print(
+        f"  {D}host {i.get('hostname','?')}  •  "
+        f"kernel {i.get('kernel','?')}  •  "
+        f"ip {i.get('ip','?')}  •  "
+        f"up {i.get('uptime','?')}{N}"
+    )
+    print(
+        f"  {D}load {i.get('load','?')}  •  "
+        f"mem {mem_str}  •  "
+        f"disk {i.get('disk','?')}{N}\n"
+    )
 
-# ── Shell execution ─────────────────────────────────────────────────────────────
 def run_cmd(cmd: str) -> str:
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
         out = (r.stdout or "") + (r.stderr or "")
         return out.strip()[:3000] or "(no output)"
     except subprocess.TimeoutExpired:
-        return "[NEXUS] Command timed out (30s)"
+        return "[nexus] Command timed out (30s)"
     except Exception as e:
-        return f"[NEXUS] Error: {e}"
+        return f"[nexus] Error: {e}"
 
-# ── Anthropic API call ──────────────────────────────────────────────────────────
 def call_api(messages: list, api_key: str, system: str) -> str:
     import urllib.request
     headers = {
@@ -138,9 +123,8 @@ def call_api(messages: list, api_key: str, system: str) -> str:
         with urllib.request.urlopen(req, timeout=30) as r:
             return json.load(r)["content"][0]["text"]
     except Exception as e:
-        return f"[NEXUS] API error: {e}"
+        return f"[nexus] API error: {e}"
 
-# ── Offline built-in commands ───────────────────────────────────────────────────
 OFFLINE_CMDS = {
     "status":  "uptime && free -h && df -h /",
     "ps":      "ps aux --sort=-%cpu | head -20",
@@ -157,56 +141,56 @@ def handle_offline(user_input: str) -> str:
     for key, cmd in OFFLINE_CMDS.items():
         if key in lower:
             return run_cmd(cmd)
-    return run_cmd(user_input)  # try as direct shell command
+    return run_cmd(user_input)
 
-# ── Status bar ─────────────────────────────────────────────────────────────────
 def status_bar():
     i = get_sysinfo()
     ts = datetime.now().strftime("%H:%M:%S")
-    print(f"{DIM}[{ts}] {i.get('hostname','nexus')} | "
-          f"load:{i.get('load','?').split()[0]} | "
-          f"up:{i.get('uptime','?')}{RESET}")
+    mem_parts = i.get('memory', '').split()
+    mem_str = f"{mem_parts[2]}/{mem_parts[1]}" if len(mem_parts) >= 3 else i.get('memory', '?')
+    print(
+        f"{D}{ts}  "
+        f"load {i.get('load','?').split()[0]}  "
+        f"mem {mem_str}  "
+        f"up {i.get('uptime','?')}{N}"
+    )
 
-# ── Main REPL ───────────────────────────────────────────────────────────────────
 def main():
-    # Run custom startup script if present
     startup = "/etc/nexus/startup.sh"
     if os.path.exists(startup):
         subprocess.run(["bash", startup], check=False)
 
     print(BANNER)
-    print_sysinfo()
 
     api_key = get_api_key()
     system_prompt = load_custom_prompt()
 
     if api_key:
-        print(f"{GREEN}[NEXUS] AI mode active — Anthropic Claude connected{RESET}")
+        print(f"  {C}{B}AI mode  •  Connected{N}")
         online = True
     else:
-        print(f"{YELLOW}[NEXUS] Offline mode — no API key found{RESET}")
-        print(f"{DIM}  Add key: echo 'sk-ant-...' > /etc/nexus/api.key{RESET}")
+        print(f"  {Y}Offline mode{N}")
+        print(f"  {D}set key: echo 'sk-ant-...' > /etc/nexus/api.key{N}")
         online = False
 
-    print(f"\n{CYAN}Type your command or question."
-          f"  Commands: 'status' 'clear' 'sysinfo' 'exit'{RESET}\n")
+    print()
+    print_sysinfo()
 
     conversation = []
 
     while True:
         try:
             status_bar()
-            user_input = input(f"{BOLD}{CYAN}nexus ❯{RESET} ").strip()
+            user_input = input(f"  {C}❯{N} ").strip()
         except (EOFError, KeyboardInterrupt):
-            print(f"\n{YELLOW}[NEXUS] Shutdown. Goodbye.{RESET}")
+            print(f"\n  {D}shutdown  •  goodbye{N}")
             sys.exit(0)
 
         if not user_input:
             continue
 
-        # Built-in commands
         if user_input.lower() in ("exit", "quit", "shutdown", "poweroff"):
-            print(f"{YELLOW}[NEXUS] Powering down. Stay vigilant.{RESET}")
+            print(f"  {D}shutdown  •  goodbye{N}")
             sys.exit(0)
 
         if user_input.lower() == "clear":
@@ -219,35 +203,33 @@ def main():
             continue
 
         if user_input.lower() == "help":
-            print(f"\n{CYAN}Built-in commands:{RESET}")
-            print("  status / sysinfo — system info")
-            print("  clear            — clear screen")
-            print("  exit             — shutdown agent")
-            print("  help             — this help")
-            print(f"\n{CYAN}AI commands:{RESET} anything else → sent to Nexus AI\n")
+            print(f"\n  {C}commands{N}")
+            print(f"  {D}status{N}   system information")
+            print(f"  {D}clear{N}    clear screen")
+            print(f"  {D}exit{N}     shutdown")
+            print(f"  {D}help{N}     this message")
+            print(f"  {D}<any>{N}     sent to AI agent\n")
             continue
 
-        # AI or offline
         if online:
             conversation.append({"role": "user", "content": user_input})
-            print(f"{DIM}[NEXUS] Thinking...{RESET}")
+            print(f"  {D}…{N}")
 
             response = call_api(conversation, api_key, system_prompt)
 
-            # Extract and execute <exec> blocks
             exec_blocks = re.findall(r"<exec>(.*?)</exec>", response, re.DOTALL)
             clean = re.sub(r"<exec>.*?</exec>", "", response, flags=re.DOTALL).strip()
 
             if clean:
-                print(f"\n{CYAN}[NEXUS]{RESET} {clean}\n")
+                print(f"\n  {clean}\n")
 
             for cmd in exec_blocks:
                 cmd = cmd.strip()
-                print(f"{YELLOW}[NEXUS] Running: {DIM}{cmd}{RESET}")
+                print(f"  {C}▸{N} {cmd}")
                 output = run_cmd(cmd)
-                print(f"{DIM}{output}{RESET}\n")
+                if output.strip():
+                    print(f"{output}\n")
 
-                # Feed output back for follow-up
                 conversation.append({"role": "assistant", "content": response})
                 conversation.append({"role": "user",
                                      "content": f"Command output:\n{output}"})
@@ -255,18 +237,17 @@ def main():
                 followup_clean = re.sub(r"<exec>.*?</exec>", "", followup,
                                         flags=re.DOTALL).strip()
                 if followup_clean:
-                    print(f"{CYAN}[NEXUS]{RESET} {followup_clean}\n")
+                    print(f"  {followup_clean}\n")
                 conversation.append({"role": "assistant", "content": followup})
                 break
             else:
                 conversation.append({"role": "assistant", "content": response})
 
-            # Keep context to last 40 messages
             if len(conversation) > 40:
                 conversation = conversation[-40:]
         else:
             out = handle_offline(user_input)
-            print(f"\n{DIM}{out}{RESET}\n")
+            print(f"\n{out}\n")
 
 if __name__ == "__main__":
     main()
