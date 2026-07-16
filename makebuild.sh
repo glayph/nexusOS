@@ -246,6 +246,7 @@ fi
 #   - creates BIOS El Torito boot record
 #   - creates UEFI boot partition
 #   - no manual bios.img / efiboot.img needed
+command -v grub-mkrescue >/dev/null 2>&1 || die "grub-mkrescue not found! Run: sudo apt-get install grub-common"
 log "Building nexus.iso with grub-mkrescue..."
 grub-mkrescue \
   --output="$OUTPUT_ISO" \
