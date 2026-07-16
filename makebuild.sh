@@ -93,6 +93,8 @@ chroot "$ROOTFS" /bin/bash -c "
     apt \
     curl \
     ca-certificates \
+    bash-completion \
+    command-not-found \
     2>&1 | grep -E '^(Setting up|E:)' | head -30
 
   echo root:nexus | chpasswd
@@ -164,23 +166,38 @@ if [[ -f "$SCRIPT_DIR/customize/motd.txt" ]]; then
   cp "$SCRIPT_DIR/customize/motd.txt" "$ROOTFS/etc/motd"
 else
   cat > "$ROOTFS/etc/motd" << 'MOTD'
-
-  ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗  ██████╗ ███████╗
-  ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗ ██║   ██║███████╗
-  ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║ ╚██████╔╝███████║
-
-  Nexus OS 1.0
-
+╭──────────────────────────────────────╮
+│  nexus  •  System Shell             │
+╰──────────────────────────────────────╯
 MOTD
 fi
 
 # ── Step 8: Shell environment ────────────────────────────
 log "Configuring shell..."
 cat > "$ROOTFS/root/.bashrc" << 'BASHRC'
-export PS1='❯ '
-export EDITOR=nano
+# ── prompt ──────────────────────────────────────────────
+PS1='\[\033[96m\]\u@\h\[\033[0m\]:\[\033[97m\]\w\[\033[0m\]\$ '
+
+# ── ls ──────────────────────────────────────────────────
+eval "$(dircolors -b 2>/dev/null)"
+alias ls='ls --color=auto'
+alias ll='ls -lh'
+alias la='ls -A'
+alias l='ls -CF'
+
+# ── utils ───────────────────────────────────────────────
+alias grep='grep --color=auto'
 alias h='history'
 alias q='exit'
+alias ..='cd ..'
+alias cls='clear'
+
+# ── env ─────────────────────────────────────────────────
+export EDITOR=nano
+
+# ── completion ──────────────────────────────────────────
+[ -f /usr/share/bash-completion/bash_completion ] && \
+  . /usr/share/bash-completion/bash_completion
 BASHRC
 
 cp "$ROOTFS/root/.bashrc" "$ROOTFS/root/.bash_profile"
