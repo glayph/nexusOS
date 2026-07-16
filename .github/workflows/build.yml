@@ -42,4 +42,5 @@ jobs:
             nexus.iso
             SHA256SUMS
           make_latest: true
+          overwrite: true
           token: ${{ secrets.GITHUB_TOKEN }}

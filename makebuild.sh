@@ -33,6 +33,12 @@ OUTPUT_ISO="$OUTPUT_DIR/nexus.iso"
 log "Nexus OS Build v2 — grub-mkrescue edition"
 log "Output: $OUTPUT_ISO"
 
+# ── Preflight checks ──────────────────────────────────────
+for cmd in debootstrap mksquashfs grub-mkrescue xorriso; do
+  command -v "$cmd" &>/dev/null || die "Missing tool: $cmd — run: sudo bash install-deps.sh"
+done
+ok "Preflight checks passed"
+
 # ── Step 1: Clean ──────────────────────────────────────────
 if $CLEAN; then
   warn "Removing existing rootfs and ISO..."
