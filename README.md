@@ -9,13 +9,11 @@
 ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝  ╚═════╝ ╚══════╝
 ```
 
-**Nexus OS — Agentic AI Linux Distribution**
-
-*Boot directly into an AI-powered shell, driven by Anthropic Claude*
+**Nexus OS — Minimal Live Linux Distribution**
 
 [![Build](https://github.com/glayph/nexusOS/actions/workflows/build.yml/badge.svg)](https://github.com/glayph/nexusOS/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/glayph/nexusOS?color=cyan)](https://github.com/glayph/nexusOS/releases/latest)
-[![ISO Size](https://img.shields.io/badge/ISO%20size-135%20MB-brightgreen)](https://github.com/glayph/nexusOS/releases/latest)
+[![ISO Size](https://img.shields.io/badge/ISO%20size-280%20MB-brightgreen)](https://github.com/glayph/nexusOS/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
@@ -24,7 +22,7 @@
 
 ## 📥 Download
 
-**[→ Latest Release: nexus.iso (135 MB)](https://github.com/glayph/nexusOS/releases/latest)**
+**[→ Latest Release: nexus.iso (280 MB)](https://github.com/glayph/nexusOS/releases/latest)**
 
 ```bash
 # Flash to USB
@@ -34,27 +32,40 @@ sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress && sync
 make qemu
 ```
 
-After boot, set your Anthropic API key:
-```bash
-echo "sk-ant-..." | sudo tee /etc/nexus/api.key
-```
-
 ---
 
 ## ⚡ What is Nexus OS?
 
-Nexus OS is a minimal bootable Linux distribution that boots directly into an AI agent shell powered by **Anthropic Claude**. Instead of a traditional desktop, you get a natural language interface with full root-level control over the system.
+A minimal bootable Linux distribution based on Ubuntu 24.04 Noble. Boots directly into a clean CLI shell with pre-installed drivers and a setup utility for installing desktops, drivers, and persistence.
 
 ```
-nexus> system status দেখাও
-nexus> list all running processes
-nexus> check disk usage
-nexus> scan network interfaces
-nexus> install python3-numpy
+nexus> apt update && apt upgrade
+nexus> top
+nexus> ifconfig
+nexus> startx
 ```
 
-- **Online mode** (with API key) → Full natural language AI control
-- **Offline mode** (no API key) → Direct shell with built-in commands
+---
+
+## 🔧 Setup Tool
+
+After boot, run:
+
+```bash
+nexus-setup
+```
+
+Navigate with arrow keys to:
+
+| Option | What it does |
+|---|---|
+| **Drivers** | Install/uninstall audio, GPU, Wi-Fi firmware, kernel modules |
+| **Desktop** | Install XFCE, MATE, GNOME, or KDE Plasma |
+| **Display Manager** | LightDM, GDM, or SDDM (auto-start GUI on boot) |
+| **User Account** | Create a sudo user |
+| **Persistence** | Save changes across reboots |
+| **Install ALL** | Full desktop setup in one command |
+| **Uninstall** | Remove installed drivers cleanly |
 
 ---
 
@@ -69,22 +80,16 @@ nexus> install python3-numpy
 ### Linux / WSL
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/glayph/nexusOS.git
 cd nexusOS
-
-# 2. Install dependencies (run once)
 sudo bash install-deps.sh
-
-# 3. Build
 make build
 ```
 
 ### Windows
 
 ```batch
-:: Step 1 — Double-click install-deps.bat
-:: Step 2 — Open a WSL terminal:
+:: Double-click install-deps.bat, then:
 wsl make build
 ```
 
@@ -110,15 +115,10 @@ Edit files inside `customize/` before building:
 |---|---|
 | `customize/packages.list` | Add extra apt packages |
 | `customize/startup.sh` | Run commands on every boot |
-| `customize/agent-prompt.txt` | Change AI agent personality |
 | `customize/motd.txt` | Change the welcome message |
 
 ```bash
-# Example: add git and docker
 echo "git" >> customize/packages.list
-echo "docker.io" >> customize/packages.list
-
-# Rebuild (keeps rootfs, only repackages)
 make build FAST=1
 ```
 
@@ -128,10 +128,10 @@ make build FAST=1
 
 ```
 nexusOS/
-├── nexus-agent.py              ← AI Agent source (Anthropic Claude)
+├── nexus-setup.sh              ← Interactive setup TUI (arrow-key menu)
 ├── makebuild.sh                ← Master build script
-├── install-deps.sh             ← Linux dependency installer (one-click)
-├── install-deps.bat            ← Windows WSL installer (double-click)
+├── install-deps.sh             ← Linux dependency installer
+├── install-deps.bat            ← Windows WSL installer
 ├── Makefile                    ← Build system (make build / clean / flash)
 ├── boot/
 │   └── grub/
@@ -139,7 +139,6 @@ nexusOS/
 ├── customize/
 │   ├── packages.list           ← Extra packages to install
 │   ├── startup.sh              ← Custom boot-time script
-│   ├── agent-prompt.txt        ← AI personality config
 │   ├── motd.txt                ← Welcome message
 │   └── README.md               ← Customization guide
 └── .github/
@@ -159,31 +158,10 @@ nexusOS/
 | Bootloader | GRUB 2 |
 | Root FS | squashfs (XZ compressed) |
 | Live system | live-boot + live-config |
-| AI Agent | Anthropic `claude-sonnet-4-6` |
-| Auto-login | root → nexus agent (tty1) |
-| ISO Size | ~135 MB |
-
----
-
-## 🤖 Nexus AI Agent
-
-On boot, the system auto-logs in as root and launches the NEXUS AI agent on `tty1`.
-
-The agent can:
-- Monitor and manage system resources (CPU, RAM, disk, network)
-- Execute shell commands from natural language
-- Install and configure software
-- Manage files, processes, and services
-- Respond to security events
-
-**API Key Setup:**
-```bash
-# Option 1: Environment variable (session only)
-export ANTHROPIC_API_KEY="sk-ant-..."
-
-# Option 2: Persistent (survives reboot)
-echo "sk-ant-..." > /etc/nexus/api.key
-```
+| Auto-login | root shell on tty1 |
+| Pre-installed | ALSA, PulseAudio, BlueZ, Wi-Fi tools |
+| Setup tool | `nexus-setup` — TUI with arrow-key navigation |
+| ISO Size | ~280 MB |
 
 ---
 
@@ -191,8 +169,8 @@ echo "sk-ant-..." > /etc/nexus/api.key
 
 | Item | Minimum |
 |---|---|
-| RAM | 512 MB (1 GB recommended) |
-| Storage | USB 256 MB+ or VM disk |
+| RAM | 512 MB (2 GB for desktop) |
+| Storage | USB 512 MB+ or VM disk |
 | CPU | x86_64 (64-bit) |
 | Boot | BIOS or UEFI |
 
@@ -206,18 +184,18 @@ echo "sk-ant-..." > /etc/nexus/api.key
 sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress && sync
 ```
 
-**Nexus agent says `Offline mode`**
-→ API key not set. Add it after boot:
-```bash
-echo "sk-ant-..." > /etc/nexus/api.key
-```
-
 **Build fails on squashfs step**
 → Run with `--clean` to start fresh:
 ```bash
 make build CLEAN=1
 ```
 
+**GUI apps won't start**
+→ Xorg may not have initialized. Run:
+```bash
+startx
+```
+
 ---
 
-*Built with [Claude AI](https://anthropic.com) · [Releases](../../releases) · [Issues](../../issues)*
+[Releases](../../releases) · [Issues](../../issues)

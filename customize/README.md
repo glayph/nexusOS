@@ -15,8 +15,6 @@ ISO build করার আগে এখানে তোমার পরিবর
 # git
 # neofetch
 # htop
-# docker.io
-# python3-numpy
 ```
 
 Build করার সময় এই package গুলো rootfs-এ automatically install হবে।
@@ -29,15 +27,8 @@ Build করার সময় এই package গুলো rootfs-এ automatic
 
 ```bash
 #!/bin/bash
-# Example startup.sh
-
 # কোনো service চালু করো
 # systemctl start myservice
-
-# Environment variable set করো
-export MY_VAR="hello"
-
-# কোনো message দেখাও
 echo "Custom startup complete!"
 ```
 
