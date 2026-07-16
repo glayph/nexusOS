@@ -178,6 +178,9 @@ chroot "$ROOTFS" /bin/bash -c "
   echo "SystemMaxFileSize=5M" >> /etc/systemd/journald.conf 2>/dev/null
   sed -i 's/^#ForwardToSyslog=yes/ForwardToSyslog=no/' /etc/systemd/journald.conf 2>/dev/null || true
 
+  # Blacklist vmwgfx (VMware GPU driver — noisy on unsupported hypervisors)
+  echo "blacklist vmwgfx" > /etc/modprobe.d/blacklist-vmwgfx.conf
+
   echo '[NEXUS] Packages installed and cleaned'
 "
 ok "Packages done"
