@@ -2,5 +2,3 @@
   nexus  •  System Shell
   ──────────────────────
 
-  Type 'nexus' to launch the shell.
-

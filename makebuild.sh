@@ -81,8 +81,6 @@ chroot "$ROOTFS" /bin/bash -c "
     live-boot-initramfs-tools \
     live-config \
     live-config-systemd \
-    python3 \
-    python3-requests \
     bash \
     coreutils \
     systemd \
@@ -134,21 +132,7 @@ if [[ -f "$SCRIPT_DIR/customize/packages.list" ]]; then
   fi
 fi
 
-# ── Step 7: Nexus AI Agent ────────────────────────────────
-log "Installing Nexus AI Agent..."
-mkdir -p "$ROOTFS/etc/nexus"
-cp "$SCRIPT_DIR/nexus-agent.py" "$ROOTFS/usr/local/bin/nexus-agent.py"
-chmod +x "$ROOTFS/usr/local/bin/nexus-agent.py"
-
-cat > "$ROOTFS/usr/local/bin/nexus" << 'LAUNCHER'
-#!/bin/bash
-export TERM=linux
-export PYTHONUNBUFFERED=1
-exec /usr/local/bin/nexus-agent.py
-LAUNCHER
-chmod +x "$ROOTFS/usr/local/bin/nexus"
-
-# ── Step 8: System identity ───────────────────────────────
+# ── Step 7: System identity ───────────────────────────────
 log "Configuring system identity..."
 echo "nexus" > "$ROOTFS/etc/hostname"
 cat > "$ROOTFS/etc/hosts" << 'HOSTS'
@@ -174,18 +158,6 @@ ExecStart=
 ExecStart=-/sbin/agetty --autologin root --noclear %I $TERM
 GETTY
 
-# Auto-launch nexus agent
-cat > "$ROOTFS/root/.bash_profile" << 'PROFILE'
-if [ "$(tty)" = "/dev/tty1" ]; then
-  exec /usr/local/bin/nexus
-fi
-PROFILE
-
-# Custom files
-[[ -f "$SCRIPT_DIR/customize/startup.sh" ]] && \
-  cp "$SCRIPT_DIR/customize/startup.sh" "$ROOTFS/etc/nexus/startup.sh" && \
-  chmod +x "$ROOTFS/etc/nexus/startup.sh"
-
 # MOTD
 if [[ -f "$SCRIPT_DIR/customize/motd.txt" ]]; then
   cp "$SCRIPT_DIR/customize/motd.txt" "$ROOTFS/etc/motd"
@@ -196,12 +168,12 @@ else
   ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗ ██║   ██║███████╗
   ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║ ╚██████╔╝███████║
 
-  Nexus OS 1.0 — Agentic AI Linux  |  Type 'nexus' to launch AI
+  Nexus OS 1.0
 
 MOTD
 fi
 
-# ── Step 9: Rebuild initramfs with live-boot ──────────────
+# ── Step 8: Rebuild initramfs with live-boot ──────────────
 log "Rebuilding initramfs..."
 chroot "$ROOTFS" update-initramfs -u -k all 2>&1 | tail -3
 ok "Initramfs rebuilt"
@@ -210,7 +182,7 @@ ok "Initramfs rebuilt"
 umount "$ROOTFS/proc" "$ROOTFS/sys" "$ROOTFS/dev" 2>/dev/null || true
 trap - EXIT
 
-# ── Step 10: ISO directory structure ─────────────────────
+# ── Step 9: ISO directory structure ─────────────────────
 log "Creating ISO structure..."
 mkdir -p "$ISO_DIR/boot/grub"
 mkdir -p "$ISO_DIR/live"
@@ -224,7 +196,7 @@ cp "$ROOTFS/boot/vmlinuz-${KVER}"    "$ISO_DIR/boot/vmlinuz"
 cp "$ROOTFS/boot/initrd.img-${KVER}" "$ISO_DIR/boot/initrd.img"
 cp "$SCRIPT_DIR/boot/grub/grub.cfg"  "$ISO_DIR/boot/grub/grub.cfg"
 
-# ── Step 11: Squashfs root filesystem ─────────────────────
+# ── Step 10: Squashfs root filesystem ─────────────────────
 if ! $NO_SQUASH; then
   log "Creating squashfs (XZ, ~20-40 min)..."
   mksquashfs "$ROOTFS" "$ISO_DIR/live/filesystem.squashfs" \
@@ -241,7 +213,7 @@ else
     die "No squashfs found! Run without --no-squash first."
 fi
 
-# ── Step 12: Build ISO with grub-mkrescue ─────────────────
+# ── Step 11: Build ISO with grub-mkrescue ─────────────────
 # grub-mkrescue automatically:
 #   - embeds GRUB modules (fixes echo.mod / chain.mod not found)
 #   - creates BIOS El Torito boot record
@@ -254,8 +226,8 @@ grub-mkrescue \
   "$ISO_DIR" \
   -- \
   -volid  "NEXUS_OS_1_0" \
-  -application_id "Nexus OS 1.0 Agentic AI Linux" \
-  -publisher "Nexus AI Project" \
+  -application_id "Nexus OS 1.0" \
+  -publisher "Nexus Project" \
   2>&1 || die "grub-mkrescue failed"
 
 # ── Done ─────────────────────────────────────────────────
