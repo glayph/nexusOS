@@ -47,9 +47,9 @@ drivers_menu() {
   local choices
   choices=$(whiptail --title "Drivers & Hardware" --checklist "Toggle drivers (already installed=ON, uncheck to remove):" 18 64 6 \
     "1" "Audio (ALSA + PulseAudio)" ON \
-    "2" "GPU (mesa + vulkan + firmware)" OFF \
+    "2" "GPU (mesa + vulkan)" OFF \
     "3" "Wi-Fi firmware (iwlwifi, realtek, brcm)" OFF \
-    "4" "Restore all kernel modules" OFF \
+    "4" "Firmware (misc-nonfree, for real GPUs)" OFF \
     "5" "Remove ALL pre-installed drivers" OFF \
     "6" "Re-install kernel (restore modules)" ON \
     3>&1 1>&2 2>&3)
@@ -74,8 +74,9 @@ drivers_menu() {
 
   local install=""
   [[ "$choices" == *"1"* ]] && install+=" alsa-utils pulseaudio"
-  [[ "$choices" == *"2"* ]] && install+=" mesa-utils mesa-vulkan-drivers xserver-xorg-video-all libgl1-mesa-dri firmware-misc-nonfree"
+  [[ "$choices" == *"2"* ]] && install+=" mesa-utils mesa-vulkan-drivers xserver-xorg-video-all libgl1-mesa-dri"
   [[ "$choices" == *"3"* ]] && install+=" firmware-brcm80211 firmware-iwlwifi firmware-realtek"
+  [[ "$choices" == *"4"* ]] && install+=" firmware-misc-nonfree"
 
   if [[ -n "$install" ]]; then
     msg "Installing" "Installing selected drivers..."
@@ -234,8 +235,7 @@ install_all() {
 
   msg "Install All" "Full installation in progress..."
   apt_install mesa-utils mesa-vulkan-drivers xserver-xorg-video-all \
-    libgl1-mesa-dri firmware-misc-nonfree firmware-brcm80211 \
-    firmware-iwlwifi firmware-realtek
+    libgl1-mesa-dri firmware-brcm80211 firmware-iwlwifi firmware-realtek
   apt_install xfce4 xfce4-terminal thunar lightdm lightdm-gtk-greeter
   echo "exec startxfce4" > /root/.xinitrc
   run useradd -m -G sudo -s /bin/bash nexus 2>&1 || true

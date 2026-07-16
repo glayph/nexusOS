@@ -116,7 +116,11 @@ chroot "$ROOTFS" /bin/bash -c "
     sudo \
     man-db \
     tmux \
-    xorg \
+    xserver-xorg-core \
+    xserver-xorg-input-all \
+    xserver-xorg-video-fbdev \
+    xserver-xorg-video-vesa \
+    xserver-xorg-video-modesetting \
     openbox \
     xinit \
     xterm \
@@ -149,6 +153,20 @@ chroot "$ROOTFS" /bin/bash -c "
            2>/dev/null || true
     depmod -a \$KVER 2>/dev/null || true
   fi
+
+  # Aggressive cleanup (shrinks ISO by ~80-100MB)
+  rm -rf /usr/share/icons/* /usr/share/themes/* /usr/share/backgrounds/* 2>/dev/null
+  rm -rf /usr/share/applications/* /usr/share/pixmaps/* /usr/share/help/* 2>/dev/null
+  rm -rf /usr/share/info/* /usr/share/groff/* /usr/share/bug/* 2>/dev/null
+  rm -rf /usr/share/lintian/* /usr/share/perl/* /usr/share/zoneinfo/* 2>/dev/null
+  find /usr/share -name '*.pdf' -o -name '*.html' -o -name '*.pyc' -o -name '*.pyo' | xargs rm -f 2>/dev/null || true
+  find /usr/lib -name '*.a' -o -name '*.la' | xargs rm -f 2>/dev/null || true
+  rm -rf /etc/apt/apt.conf.d/*dpkg* /var/cache/debconf/* 2>/dev/null || true
+
+  # Disable unnecessary systemd services
+  systemctl disable systemd-resolved systemd-timesyncd fstrim.timer apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+  systemctl mask systemd-journald-audit.socket 2>/dev/null || true
+
   echo '[NEXUS] Packages installed and cleaned'
 "
 ok "Packages done"
