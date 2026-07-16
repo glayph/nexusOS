@@ -90,6 +90,7 @@ chroot "$ROOTFS" /bin/bash -c "
     iproute2 \
     iputils-ping \
     nano \
+    apt \
     curl \
     ca-certificates \
     2>&1 | grep -E '^(Setting up|E:)' | head -30
@@ -173,7 +174,24 @@ else
 MOTD
 fi
 
-# ── Step 8: Rebuild initramfs with live-boot ──────────────
+# ── Step 8: Shell environment ────────────────────────────
+log "Configuring shell..."
+cat > "$ROOTFS/root/.bashrc" << 'BASHRC'
+export PS1='❯ '
+export EDITOR=nano
+alias h='history'
+alias q='exit'
+BASHRC
+
+cp "$ROOTFS/root/.bashrc" "$ROOTFS/root/.bash_profile"
+
+cat > "$ROOTFS/root/.inputrc" << 'INPUTRC'
+set editing-mode emacs
+set bell-style none
+TAB: menu-complete
+INPUTRC
+
+# ── Step 9: Rebuild initramfs with live-boot ──────────────
 log "Rebuilding initramfs..."
 chroot "$ROOTFS" update-initramfs -u -k all 2>&1 | tail -3
 ok "Initramfs rebuilt"
@@ -182,7 +200,7 @@ ok "Initramfs rebuilt"
 umount "$ROOTFS/proc" "$ROOTFS/sys" "$ROOTFS/dev" 2>/dev/null || true
 trap - EXIT
 
-# ── Step 9: ISO directory structure ─────────────────────
+# ── Step 10: ISO directory structure ─────────────────────
 log "Creating ISO structure..."
 mkdir -p "$ISO_DIR/boot/grub"
 mkdir -p "$ISO_DIR/live"
