@@ -25,6 +25,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache rootfs
+        uses: actions/cache@v4
+        with:
+          path: rootfs
+          key: nexus-rootfs-${{ hashFiles('boot/**', 'customize/**', 'install-deps.sh', 'nexus-setup.sh', 'makebuild.sh') }}
+          restore-keys: |
+            nexus-rootfs-
+
       - name: Install dependencies
         run: sudo bash install-deps.sh
 

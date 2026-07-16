@@ -342,9 +342,9 @@ cp "$SCRIPT_DIR/boot/grub/grub.cfg"  "$ISO_DIR/boot/grub/grub.cfg"
 
 # ── Step 12: Squashfs root filesystem ─────────────────────
 if ! $NO_SQUASH; then
-  log "Creating squashfs (XZ, ~20-40 min)..."
+  log "Creating squashfs (GZIP, ~5-10 min)..."
   mksquashfs "$ROOTFS" "$ISO_DIR/live/filesystem.squashfs" \
-    -comp xz \
+    -comp gzip \
     -Xbcj x86 \
     -b 1M \
     -e boot \
