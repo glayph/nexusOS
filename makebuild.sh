@@ -114,6 +114,10 @@ chroot "$ROOTFS" /bin/bash -c "
     sudo \
     man-db \
     tmux \
+    xorg \
+    openbox \
+    xinit \
+    xterm \
     2>&1 | grep -E '^(Setting up|E:)' | head -30
 
   echo root:nexus | chpasswd
@@ -129,7 +133,7 @@ chroot "$ROOTFS" /bin/bash -c "
   KVER=\$(ls /boot/vmlinuz-* 2>/dev/null | sort -V | tail -1 | sed 's/.*vmlinuz-//')
   if [[ -n \"\$KVER\" ]]; then
     cd /lib/modules/\$KVER/kernel
-    rm -rf drivers/media drivers/staging drivers/gpu/drm \
+    rm -rf drivers/media drivers/staging \
            drivers/bluetooth drivers/infiniband \
            drivers/isdn drivers/atm drivers/nfc \
            sound 2>/dev/null || true
