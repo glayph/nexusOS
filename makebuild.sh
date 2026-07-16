@@ -120,6 +120,13 @@ chroot "$ROOTFS" /bin/bash -c "
     xinit \
     xterm \
     whiptail \
+    alsa-utils \
+    pulseaudio \
+    wireless-tools \
+    iw \
+    wpa_supplicant \
+    bluez \
+    bluez-tools \
     2>&1
 
   echo root:nexus | chpasswd
@@ -136,9 +143,9 @@ chroot "$ROOTFS" /bin/bash -c "
   if [[ -n \"\$KVER\" ]]; then
     cd /lib/modules/\$KVER/kernel
     rm -rf drivers/media drivers/staging \
-           drivers/bluetooth drivers/infiniband \
+           drivers/infiniband \
            drivers/isdn drivers/atm drivers/nfc \
-           sound 2>/dev/null || true
+           2>/dev/null || true
     depmod -a \$KVER 2>/dev/null || true
   fi
   echo '[NEXUS] Packages installed and cleaned'
