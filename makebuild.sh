@@ -119,6 +119,7 @@ chroot "$ROOTFS" /bin/bash -c "
     openbox \
     xinit \
     xterm \
+    whiptail \
     2>&1
 
   echo root:nexus | chpasswd
@@ -237,7 +238,12 @@ set bell-style none
 TAB: menu-complete
 INPUTRC
 
-# ── Step 9: Rebuild initramfs with live-boot ──────────────
+# ── Step 9: Setup script ────────────────────────────────
+log "Installing nexus-setup..."
+cp "$SCRIPT_DIR/nexus-setup.sh" "$ROOTFS/usr/bin/nexus-setup"
+chmod +x "$ROOTFS/usr/bin/nexus-setup"
+
+# ── Step 10: Rebuild initramfs with live-boot ──────────────
 log "Rebuilding initramfs..."
 chroot "$ROOTFS" /bin/bash -c "update-initramfs -u -k all" 2>&1 || {
   warn "update-initramfs failed — checking /boot contents"
@@ -251,7 +257,7 @@ umount "$ROOTFS/dev/pts" 2>/dev/null || true
 umount "$ROOTFS/proc" "$ROOTFS/sys" "$ROOTFS/dev" 2>/dev/null || true
 trap - EXIT
 
-# ── Step 10: ISO directory structure ─────────────────────
+# ── Step 11: ISO directory structure ─────────────────────
 log "Creating ISO structure..."
 mkdir -p "$ISO_DIR/boot/grub"
 mkdir -p "$ISO_DIR/live"
@@ -265,7 +271,7 @@ cp "$ROOTFS/boot/vmlinuz-${KVER}"    "$ISO_DIR/boot/vmlinuz"
 cp "$ROOTFS/boot/initrd.img-${KVER}" "$ISO_DIR/boot/initrd.img"
 cp "$SCRIPT_DIR/boot/grub/grub.cfg"  "$ISO_DIR/boot/grub/grub.cfg"
 
-# ── Step 10: Squashfs root filesystem ─────────────────────
+# ── Step 12: Squashfs root filesystem ─────────────────────
 if ! $NO_SQUASH; then
   log "Creating squashfs (XZ, ~20-40 min)..."
   mksquashfs "$ROOTFS" "$ISO_DIR/live/filesystem.squashfs" \
