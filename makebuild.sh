@@ -259,9 +259,9 @@ grub-mkrescue \
   "$ISO_DIR" \
   -- \
   -volid  "NEXUS_OS_1_0" \
-  -appid  "Nexus OS 1.0 Agentic AI Linux" \
+  -application_id "Nexus OS 1.0 Agentic AI Linux" \
   -publisher "Nexus AI Project" \
-  2>&1 | tail -8
+  2>&1 || die "grub-mkrescue failed"
 
 # ── Done ─────────────────────────────────────────────────
 echo ""
