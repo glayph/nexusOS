@@ -48,8 +48,7 @@ fi
 # ── Step 2: Bootstrap ─────────────────────────────────────
 if [[ ! -d "$ROOTFS/bin" ]]; then
   log "Bootstrapping Ubuntu 24.04 Noble (minbase)..."
-  debootstrap --arch=amd64 --variant=minbase noble "$ROOTFS" \
-    http://archive.ubuntu.com/ubuntu/ 2>&1 | grep -E "^[EW]:" || true
+  debootstrap --arch=amd64 --variant=minbase noble "$ROOTFS" http://archive.ubuntu.com/ubuntu/
   ok "Bootstrap done"
 else
   warn "Rootfs exists — skipping (use --clean to rebuild)"
@@ -193,8 +192,7 @@ if [[ -f "$SCRIPT_DIR/customize/packages.list" ]]; then
     log "Installing custom packages: $PKGS"
     chroot "$ROOTFS" /bin/bash -c "
       apt-get update -qq
-      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends $PKGS \
-        2>&1 | grep -E '^(Setting up|E:)' || true
+      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends $PKGS
       apt-get clean && rm -rf /var/lib/apt/lists/*
     "
   fi
@@ -237,6 +235,31 @@ else
 MOTD
 fi
 
+# Install custom startup script
+if [[ -f "$SCRIPT_DIR/customize/startup.sh" ]]; then
+  cp "$SCRIPT_DIR/customize/startup.sh" "$ROOTFS/tmp/startup.sh"
+  chroot "$ROOTFS" /bin/bash -c "
+    mkdir -p /usr/local/lib/nexus
+    cp /tmp/startup.sh /usr/local/lib/nexus/startup.sh
+    chmod +x /usr/local/lib/nexus/startup.sh
+
+    cat > /etc/systemd/system/nexus-startup.service << 'SVCE'
+[Unit]
+Description=Nexus OS Custom Startup
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/nexus/startup.sh
+
+[Install]
+WantedBy=multi-user.target
+SVCE
+    systemctl enable nexus-startup.service 2>/dev/null || true
+  "
+fi
+
 # ── Step 8: Shell environment ────────────────────────────
 log "Configuring shell..."
 cat > "$ROOTFS/root/.bashrc" << 'BASHRC'
@@ -277,6 +300,12 @@ set editing-mode emacs
 set bell-style none
 TAB: menu-complete
 INPUTRC
+
+# Copy shell configs to /etc/skel for new users
+mkdir -p "$ROOTFS/etc/skel"
+cp "$ROOTFS/root/.bashrc" "$ROOTFS/etc/skel/"
+cp "$ROOTFS/root/.bash_profile" "$ROOTFS/etc/skel/"
+cp "$ROOTFS/root/.inputrc" "$ROOTFS/etc/skel/"
 
 # ── Step 9: Setup script ────────────────────────────────
 log "Installing nexus-setup..."

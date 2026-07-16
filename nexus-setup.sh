@@ -23,6 +23,10 @@ input() {
   whiptail --title "$1" --inputbox "$2" 10 60 3>&1 1>&2 2>&3
 }
 
+password_input() {
+  whiptail --title "$1" --passwordbox "$2" 10 60 3>&1 1>&2 2>&3
+}
+
 run() {
   echo -e "${C}▸${N} $*"
   "$@" 2>&1 | while IFS= read -r line; do echo "  $line"; done
@@ -84,7 +88,6 @@ drivers_menu() {
     msg "Done" "Additional drivers installed."
   fi
 
-  A_ERR=1
 }
 
 remove_drivers() {
@@ -173,7 +176,7 @@ create_user() {
   local username password
   username=$(input "Create User" "Enter username:")
   [[ -z "$username" ]] && return
-  password=$(input "Create User" "Enter password for $username:")
+  password=$(password_input "Create User" "Enter password for $username:")
   [[ -z "$password" ]] && return
 
   run useradd -m -G sudo -s /bin/bash "$username" 2>&1
@@ -187,11 +190,13 @@ persistence_setup() {
   [[ $? -ne 0 ]] && return
 
   run dd if=/dev/zero of=/persist.img bs=1M count=512 2>&1
-  run mkfs.ext4 -F /persist.img 2>&1
+  run mkfs.ext4 -F -L persistence /persist.img 2>&1
   run mkdir -p /mnt/persist 2>&1
   echo "/persist.img /mnt/persist ext4 loop,defaults 0 0" >> /etc/fstab
   run mount /mnt/persist 2>&1
-  run mkdir -p /mnt/persist/{upper,work,session} 2>&1
+  run mkdir -p /mnt/persist/{upper,work} 2>&1
+  # Create persistence.conf so live-boot can use this too
+  echo "/ union" > /mnt/persist/persistence.conf
 
   cat > /etc/systemd/system/persist-overlay.service << 'SVC'
 [Unit]
@@ -212,16 +217,31 @@ SVC
 
   cat > /usr/bin/persist-overlay << 'OVL'
 #!/bin/bash
-PERSIST=/mnt/persist; UPPER=$PERSIST/upper; WORK=$PERSIST/work; SNAP=$PERSIST/session
+PERSIST=/mnt/persist
+UPPER=$PERSIST/upper
+WORK=$PERSIST/work
+SNAP=$PERSIST/session
+
 case "$1" in
   stop)
-    d=$(ls -t $SNAP 2>/dev/null | head -1)
-    [ -n "$d" ] && mount --bind $SNAP/$d $UPPER 2>/dev/null ;;
+    mkdir -p $SNAP
+    snap=$(date +%Y%m%d-%H%M%S)
+    mkdir -p $SNAP/$snap
+    mount --bind $UPPER $SNAP/$snap 2>/dev/null || true
+    ;;
   *)
-    mkdir -p $UPPER $WORK $SNAP
-    snap=$(date +%Y%m%d-%H%M%S); mkdir -p $SNAP/$snap
-    mount --bind $SNAP/$snap $UPPER 2>/dev/null
-    mount -t overlay overlay -o lowerdir=/,upperdir=$UPPER,workdir=$WORK /mnt/overlay 2>/dev/null ;;
+    mkdir -p $UPPER $WORK
+    # Restore last snapshot if exists
+    mkdir -p $SNAP 2>/dev/null
+    last=$(ls -t $SNAP 2>/dev/null | head -1)
+    if [ -n "$last" ] && [ -z "$(ls -A $UPPER 2>/dev/null)" ]; then
+      cp -a $SNAP/$last/* $UPPER/ 2>/dev/null || true
+    fi
+    # Overlay persistent storage on top of root
+    mkdir -p /mnt/root
+    mount -t overlay overlay -o lowerdir=/,upperdir=$UPPER,workdir=$WORK /mnt/root 2>/dev/null
+    mount --bind /mnt/root / 2>/dev/null || true
+    ;;
 esac
 OVL
   chmod +x /usr/bin/persist-overlay
@@ -241,6 +261,7 @@ install_all() {
   run useradd -m -G sudo -s /bin/bash nexus 2>&1 || true
   echo "nexus:nexus" | chpasswd
   A_GUI=1; A_DM="lightdm"; A_USER="nexus"
+  run systemctl enable lightdm 2>&1
 
   msg "All Done" "Reboot to use full desktop."
   if yesno "Reboot?" "Reboot now?"; then reboot; fi

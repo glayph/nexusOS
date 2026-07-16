@@ -32,8 +32,8 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0
-          name: "Nexus OS v1.0"
+          tag_name: v1.0.${{ github.run_number }}
+          name: "Nexus OS v1.0.${{ github.run_number }}"
           body: |
             Download nexus.iso below and flash to USB or boot in a VM.
             Flash: sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress
@@ -41,5 +41,4 @@ jobs:
             nexus.iso
             SHA256SUMS
           make_latest: true
-          overwrite: true
           token: ${{ secrets.GITHUB_TOKEN }}
