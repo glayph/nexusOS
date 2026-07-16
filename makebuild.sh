@@ -95,6 +95,25 @@ chroot "$ROOTFS" /bin/bash -c "
     ca-certificates \
     bash-completion \
     command-not-found \
+    less \
+    file \
+    tree \
+    unzip \
+    xz-utils \
+    bzip2 \
+    zip \
+    psmisc \
+    net-tools \
+    dnsutils \
+    wget \
+    openssh-client \
+    traceroute \
+    pciutils \
+    usbutils \
+    lsb-release \
+    sudo \
+    man-db \
+    tmux \
     2>&1 | grep -E '^(Setting up|E:)' | head -30
 
   echo root:nexus | chpasswd
@@ -191,6 +210,11 @@ alias h='history'
 alias q='exit'
 alias ..='cd ..'
 alias cls='clear'
+alias ip='ip -c'
+alias df='df -h'
+alias du='du -sh'
+alias free='free -h'
+alias nano='nano -l'
 
 # ── env ─────────────────────────────────────────────────
 export EDITOR=nano
