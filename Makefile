@@ -3,7 +3,7 @@
 #  Usage: make [target]
 # ============================================================
 
-.PHONY: all install build clean flash help
+.PHONY: all install build clean flash help lint shellcheck
 
 # Default target
 all: help
@@ -19,6 +19,8 @@ help:
 	@echo "  make clean          Remove all build artifacts"
 	@echo "  make flash DEV=/dev/sdX   Flash ISO to USB"
 	@echo "  make qemu           Test in QEMU (needs qemu)"
+	@echo "  make lint           Run shellcheck on all scripts"
+	@echo "  make shellcheck     Alias for lint"
 	@echo "  ─────────────────────────────────────────────"
 	@echo ""
 
@@ -59,3 +61,10 @@ qemu:
 	  -enable-kvm \
 	  -nographic \
 	  -serial mon:stdio
+
+lint:
+	@command -v shellcheck >/dev/null || (echo "Install: apt install shellcheck"; exit 1)
+	@echo "[NEXUS] Running shellcheck on all scripts..."
+	@shellcheck makebuild.sh install-deps.sh nexus-setup.sh
+
+shellcheck: lint

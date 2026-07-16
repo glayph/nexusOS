@@ -1,7 +1,7 @@
 @echo off
 :: ============================================================
 ::  NEXUS OS — One-Click Dependency Installer (Windows + WSL)
-::  Double-click করো অথবা cmd-এ চালাও
+::  Double-click or run in cmd
 :: ============================================================
 
 title Nexus OS — Dependency Installer
@@ -11,38 +11,38 @@ echo   NEXUS OS — Windows Setup (WSL)
 echo   ================================
 echo.
 
-:: WSL আছে কিনা চেক করো
+:: Check if WSL is installed
 wsl --status >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERROR] WSL installed নেই!
+    echo [ERROR] WSL not installed!
     echo.
-    echo   WSL install করতে PowerShell (Admin) এ চালাও:
+    echo   Install WSL in PowerShell (Admin):
     echo   wsl --install
     echo.
-    echo   Install হওয়ার পর PC restart করো, তারপর এই ফাইল আবার চালাও।
+    echo   After install, restart PC, then run this file again.
     pause
     exit /b 1
 )
 
-echo [OK] WSL পাওয়া গেছে।
+echo [OK] WSL found.
 echo.
-echo [1/2] WSL এ dependencies install হচ্ছে...
+echo [1/2] Installing dependencies in WSL...
 wsl bash -c "sudo bash install-deps.sh"
 
 if %errorlevel% neq 0 (
     echo.
-    echo [ERROR] Install failed! উপরের error দেখো।
+    echo [ERROR] Install failed! Check error above.
     pause
     exit /b 1
 )
 
 echo.
-echo [2/2] Setup সম্পন্ন!
+echo [2/2] Setup complete!
 echo.
-echo   এখন ISO build করতে:
+echo   Build ISO now:
 echo     wsl make build
 echo.
-echo   অথবা WSL terminal খুলে:
+echo   Or open WSL terminal:
 echo     sudo ./makebuild.sh
 echo.
 pause

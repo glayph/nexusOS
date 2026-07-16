@@ -3,7 +3,14 @@ name: Build Nexus OS ISO
 on:
   push:
     branches: [main]
-    paths: [boot/**, customize/**, makebuild.sh]
+    paths:
+      - boot/**
+      - customize/**
+      - makebuild.sh
+      - Makefile
+      - install-deps.sh
+      - nexus-setup.sh
+      - .github/**
   workflow_dispatch:
 
 permissions:
@@ -12,7 +19,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     steps:
       - name: Checkout

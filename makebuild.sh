@@ -66,7 +66,12 @@ mountpoint -q "$ROOTFS/proc" || mount --bind /proc "$ROOTFS/proc"
 mountpoint -q "$ROOTFS/sys"  || mount --bind /sys  "$ROOTFS/sys"
 mountpoint -q "$ROOTFS/dev"  || mount --bind /dev  "$ROOTFS/dev"
 mountpoint -q "$ROOTFS/dev/pts" || mount --bind /dev/pts "$ROOTFS/dev/pts" 2>/dev/null || true
-trap "umount '$ROOTFS/proc' '$ROOTFS/sys' '$ROOTFS/dev' 2>/dev/null; umount '$ROOTFS/dev/pts' 2>/dev/null; true" EXIT
+
+nexus_cleanup() {
+  umount "$ROOTFS/dev/pts" 2>/dev/null || true
+  umount "$ROOTFS/proc" "$ROOTFS/sys" "$ROOTFS/dev" 2>/dev/null || true
+}
+trap nexus_cleanup EXIT ERR
 
 # ── Step 5: Install packages ───────────────────────────────
 log "Installing packages..."
@@ -314,17 +319,12 @@ chmod +x "$ROOTFS/usr/bin/nexus-setup"
 
 # ── Step 10: Rebuild initramfs with live-boot ──────────────
 log "Rebuilding initramfs..."
-chroot "$ROOTFS" /bin/bash -c "update-initramfs -u -k all" 2>&1 || {
+chroot "$ROOTFS" /bin/bash -c "update-initramfs -u -k all" || {
   warn "update-initramfs failed — checking /boot contents"
   ls -la "$ROOTFS/boot/" 2>/dev/null || true
   die "Initramfs rebuild failed"
 }
 ok "Initramfs rebuilt"
-
-# Unmount
-umount "$ROOTFS/dev/pts" 2>/dev/null || true
-umount "$ROOTFS/proc" "$ROOTFS/sys" "$ROOTFS/dev" 2>/dev/null || true
-trap - EXIT
 
 # ── Step 11: ISO directory structure ─────────────────────
 log "Creating ISO structure..."
@@ -349,7 +349,7 @@ if ! $NO_SQUASH; then
     -b 1M \
     -e boot \
     -noappend \
-    2>&1 | tail -3
+    | tail -3
   ok "Squashfs: $(du -sh $ISO_DIR/live/filesystem.squashfs | cut -f1)"
 else
   warn "Skipping squashfs rebuild (--no-squash)"
@@ -357,7 +357,7 @@ else
     die "No squashfs found! Run without --no-squash first."
 fi
 
-# ── Step 11: Build ISO with grub-mkrescue ─────────────────
+# ── Step 13: Build ISO with grub-mkrescue ─────────────────
 # grub-mkrescue automatically:
 #   - embeds GRUB modules (fixes echo.mod / chain.mod not found)
 #   - creates BIOS El Torito boot record
@@ -372,7 +372,7 @@ grub-mkrescue \
   -volid  "NEXUS_OS_1_0" \
   -application_id "Nexus OS 1.0" \
   -publisher "Nexus Project" \
-  2>&1 || die "grub-mkrescue failed"
+  || die "grub-mkrescue failed"
 
 # ── Done ─────────────────────────────────────────────────
 echo ""
