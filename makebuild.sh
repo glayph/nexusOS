@@ -163,9 +163,20 @@ chroot "$ROOTFS" /bin/bash -c "
   find /usr/lib -name '*.a' -o -name '*.la' | xargs rm -f 2>/dev/null || true
   rm -rf /etc/apt/apt.conf.d/*dpkg* /var/cache/debconf/* 2>/dev/null || true
 
-  # Disable unnecessary systemd services
-  systemctl disable systemd-resolved systemd-timesyncd fstrim.timer apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
-  systemctl mask systemd-journald-audit.socket 2>/dev/null || true
+  # Disable unnecessary systemd services (faster boot)
+  systemctl disable systemd-resolved systemd-timesyncd fstrim.timer \
+    apt-daily.timer apt-daily-upgrade.timer \
+    man-db.timer systemd-networkd-wait-online 2>/dev/null || true
+  systemctl mask systemd-journald-audit.socket dev-hugepages.mount \
+    sys-kernel-debug.mount 2>/dev/null || true
+
+  # Compress initramfs with xz (smaller = faster to load)
+  echo "COMPRESS=xz" >> /etc/initramfs-tools/initramfs.conf
+
+  # Reduce systemd journal size limit
+  echo "SystemMaxUse=10M" >> /etc/systemd/journald.conf 2>/dev/null
+  echo "SystemMaxFileSize=5M" >> /etc/systemd/journald.conf 2>/dev/null
+  sed -i 's/^#ForwardToSyslog=yes/ForwardToSyslog=no/' /etc/systemd/journald.conf 2>/dev/null || true
 
   echo '[NEXUS] Packages installed and cleaned'
 "
