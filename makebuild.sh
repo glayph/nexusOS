@@ -66,7 +66,8 @@ SOURCES
 mountpoint -q "$ROOTFS/proc" || mount --bind /proc "$ROOTFS/proc"
 mountpoint -q "$ROOTFS/sys"  || mount --bind /sys  "$ROOTFS/sys"
 mountpoint -q "$ROOTFS/dev"  || mount --bind /dev  "$ROOTFS/dev"
-trap "umount '$ROOTFS/proc' '$ROOTFS/sys' '$ROOTFS/dev' 2>/dev/null; true" EXIT
+mountpoint -q "$ROOTFS/dev/pts" || mount --bind /dev/pts "$ROOTFS/dev/pts" 2>/dev/null || true
+trap "umount '$ROOTFS/proc' '$ROOTFS/sys' '$ROOTFS/dev' 2>/dev/null; umount '$ROOTFS/dev/pts' 2>/dev/null; true" EXIT
 
 # ── Step 5: Install packages ───────────────────────────────
 log "Installing packages..."
@@ -118,7 +119,7 @@ chroot "$ROOTFS" /bin/bash -c "
     openbox \
     xinit \
     xterm \
-    2>&1 | grep -E '^(Setting up|E:)' | head -30
+    2>&1
 
   echo root:nexus | chpasswd
 
@@ -238,10 +239,15 @@ INPUTRC
 
 # ── Step 9: Rebuild initramfs with live-boot ──────────────
 log "Rebuilding initramfs..."
-chroot "$ROOTFS" update-initramfs -u -k all 2>&1 | tail -3
+chroot "$ROOTFS" /bin/bash -c "update-initramfs -u -k all" 2>&1 || {
+  warn "update-initramfs failed — checking /boot contents"
+  ls -la "$ROOTFS/boot/" 2>/dev/null || true
+  die "Initramfs rebuild failed"
+}
 ok "Initramfs rebuilt"
 
 # Unmount
+umount "$ROOTFS/dev/pts" 2>/dev/null || true
 umount "$ROOTFS/proc" "$ROOTFS/sys" "$ROOTFS/dev" 2>/dev/null || true
 trap - EXIT
 
