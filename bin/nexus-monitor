@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""Nexus OS — Live Monitoring Dashboard"""
+import subprocess, os, time, sys
+
+def run(cmd):
+    try: return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=3).stdout.strip()
+    except: return "N/A"
+
+def clear(): sys.stdout.write("\033[2J\033[H"); sys.stdout.flush()
+
+C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"; D="\033[2m"
+
+def bar(pct, width=20):
+    pct = min(100, max(0, pct))
+    filled = int(width * pct / 100)
+    color = G if pct < 60 else Y if pct < 85 else R
+    return f"{color}{'█'*filled}{'░'*(width-filled)}{N} {pct:.0f}%"
+
+def mem_pct():
+    lines = open("/proc/meminfo").readlines()
+    total = int(next(l for l in lines if l.startswith("MemTotal")).split()[1])
+    avail = int(next(l for l in lines if l.startswith("MemAvailable")).split()[1])
+    return (total - avail) / total * 100, total//1024, (total-avail)//1024
+
+def cpu_pct():
+    def read():
+        l = open("/proc/stat").readline().split()
+        idle, total = int(l[4]), sum(int(x) for x in l[1:])
+        return idle, total
+    i1, t1 = read(); time.sleep(0.3); i2, t2 = read()
+    return (1 - (i2-i1)/(t2-t1)) * 100
+
+def disk_pct(path="/"):
+    s = os.statvfs(path)
+    total = s.f_blocks * s.f_frsize
+    used  = (s.f_blocks - s.f_bfree) * s.f_frsize
+    return used/total*100 if total else 0, total//1024//1024//1024, used//1024//1024//1024
+
+print(f"{C}Starting Nexus Monitor... (Ctrl+C to exit){N}")
+try:
+    while True:
+        clear()
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        hostname = run("hostname")
+        uptime   = run("uptime -p")
+        load     = run("cut -d' ' -f1-3 /proc/loadavg")
+        procs    = run("ps aux | wc -l")
+        ip       = run("hostname -I | awk '{print $1}'")
+
+        cpu = cpu_pct()
+        mp, mtotal, mused = mem_pct()
+        dp, dtotal, dused = disk_pct("/")
+
+        # Network RX/TX
+        net_lines = open("/proc/net/dev").readlines()
+        net_iface = next((l for l in net_lines if "eth0" in l or "ens" in l or "enp" in l), None)
+        if net_iface:
+            parts = net_iface.split(); rx, tx = int(parts[1])//1024, int(parts[9])//1024
+            net_str = f"RX {rx}KB  TX {tx}KB"
+        else:
+            net_str = "No network interface"
+
+        print(f"\n{B}{C}╔══════ NEXUS OS — LIVE MONITOR ═══════════════════╗{N}")
+        print(f"{B}{C}║{N}  {now}   {D}{hostname}   {ip}{N}")
+        print(f"{B}{C}║{N}  Uptime: {uptime}   Load: {load}   Procs: {procs}")
+        print(f"{B}{C}╠══════════════════════════════════════════════════╣{N}")
+        print(f"{B}{C}║{N}  {B}CPU {N}  {bar(cpu)}")
+        print(f"{B}{C}║{N}  {B}MEM {N}  {bar(mp)}  {mused}/{mtotal} MB")
+        print(f"{B}{C}║{N}  {B}DISK{N}  {bar(dp)}  {dused}/{dtotal} GB")
+        print(f"{B}{C}║{N}  {B}NET {N}  {D}{net_str}{N}")
+        print(f"{B}{C}╠══════ TOP PROCESSES ══════════════════════════════╣{N}")
+        procs_out = run("ps aux --sort=-%cpu | head -8 | awk 'NR>1{printf \"  %-20s CPU:%-5s MEM:%s\\n\",$11,$3,$4}'")
+        print(procs_out)
+        print(f"{B}{C}╚══════════════════════════════════════════════════╝{N}")
+        print(f"\n  {D}Refresh: 2s   Ctrl+C to exit   'nexus-doctor' for full report{N}")
+        time.sleep(2)
+except KeyboardInterrupt:
+    print(f"\n{Y}Monitor stopped.{N}")
