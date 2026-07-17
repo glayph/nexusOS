@@ -1,19 +1,18 @@
 <div align="center">
 
 ```
-███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗  ██████╗ ███████╗
-████╗  ██║██╔════╝╚██╗██╔╝██║   ██║██╔════╝ ██╔═══██╗██╔════╝
-██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗ ██║   ██║███████╗
-██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║ ██║   ██║╚════██║
-██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║ ╚██████╔╝███████║
-╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝  ╚═════╝ ╚══════╝
+████████╗ █████╗      ██╗ █████╗      ██████╗ ███████╗
+╚══██╔══╝██╔══██╗     ██║██╔══██╗    ██╔═══██╗██╔════╝
+   ██║   ███████║     ██║███████║    ██║   ██║███████╗
+   ██║   ██╔══██║██   ██║██╔══██║    ██║   ██║╚════██║
+   ██║   ██║  ██║╚█████╔╝██║  ██║    ╚██████╔╝███████║
+   ╚═╝   ╚═╝  ╚═╝ ╚════╝ ╚═╝  ╚═╝     ╚═════╝ ╚══════╝
 ```
 
-**Nexus OS — Minimal Live Linux Distribution**
+**TajaOS v2.0 — CLI-Based Operating System**
 
 [![Build](https://github.com/glayph/nexusOS/actions/workflows/build.yml/badge.svg)](https://github.com/glayph/nexusOS/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/glayph/nexusOS?color=cyan)](https://github.com/glayph/nexusOS/releases/latest)
-[![ISO Size](https://img.shields.io/badge/ISO%20size-280%20MB-brightgreen)](https://github.com/glayph/nexusOS/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
@@ -22,11 +21,11 @@
 
 ## 📥 Download
 
-**[→ Latest Release: nexus.iso (280 MB)](https://github.com/glayph/nexusOS/releases/latest)**
+**[→ Latest Release: tajaos.iso (280 MB)](https://github.com/glayph/nexusOS/releases/latest)**
 
 ```bash
 # Flash to USB
-sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress && sync
+sudo dd if=tajaos.iso of=/dev/sdX bs=4M status=progress && sync
 
 # Or test in QEMU
 make qemu
@@ -34,38 +33,76 @@ make qemu
 
 ---
 
-## ⚡ What is Nexus OS?
+## ⚡ What is TajaOS?
 
-A minimal bootable Linux distribution based on Ubuntu 24.04 Noble. Boots directly into a clean CLI shell with pre-installed drivers and a setup utility for installing desktops, drivers, and persistence.
+A minimal bootable Linux distribution based on Ubuntu 24.04 Noble. Boots directly into a clean CLI shell with the complete **TajaOS** system management toolkit.
 
 ```
-nexus> apt update && apt upgrade
-nexus> top
-nexus> ifconfig
-nexus> startx
+os doctor          # System health check
+os net wifi        # Wi-Fi scan & connect
+os svc list        # List services
+os pkg install     # Install packages
+os monitor         # Live system dashboard
+os ai chat         # Local LLM chat
+os sec vault       # Encrypted vault
 ```
 
 ---
 
-## 🔧 Setup Tool
+## 🏗 System Architecture
 
-After boot, run:
-
-```bash
-nexus-setup
+```
+os                            # Unified command interface
+├── tajados-core              # Config system & profiles
+├── tajanet                   # Network manager (Wi-Fi, eth, VPN, DNS, proxy, firewall)
+├── tajainit                  # Service manager & boot optimization
+├── tajahook                  # Event hook system & triggers
+├── tajapkg                   # Package manager with offline cache
+├── tajadev                   # Developer tools (containers, VMs, templates)
+├── tajaai                    # Local LLM & AI toolkit
+├── tajasec                   # Security (vault, hardening, audit, tamper detect)
+├── tajados-persist           # Persistence manager & snapshots
+├── tajamon                   # System monitoring dashboard
+├── tajashell                 # TUI shell with keyboard navigation
+├── tajarecover               # Recovery tools & boot repair
+├── tajamedia                 # Media tools (OCR, QR, screen record, benchmarks)
+├── tajabuild                 # ISO build & release pipeline
+└── nexus-setup               # Interactive setup TUI
 ```
 
-Navigate with arrow keys to:
+---
 
-| Option | What it does |
+## 🔧 Quick Start
+
+After boot:
+
+```bash
+os doctor                      # Check system health
+os net wifi connect MyWiFi     # Connect to Wi-Fi
+os setup                       # Run setup wizard
+os persist create              # Enable persistence (save changes)
+os config set core.hostname mybox  # Set hostname
+os shell                       # Launch TUI shell menu
+```
+
+---
+
+## 🎨 Features
+
+| Category | Commands |
 |---|---|
-| **Drivers** | Install/uninstall audio, GPU, Wi-Fi firmware, kernel modules |
-| **Desktop** | Install XFCE, MATE, GNOME, or KDE Plasma |
-| **Display Manager** | LightDM, GDM, or SDDM (auto-start GUI on boot) |
-| **User Account** | Create a sudo user |
-| **Persistence** | Save changes across reboots |
-| **Install ALL** | Full desktop setup in one command |
-| **Uninstall** | Remove installed drivers cleanly |
+| **System** | `os doctor`, `os config`, `os profile`, `os init` |
+| **Shell** | `os shell`, `os history`, `os session-save/load` |
+| **Network** | `os net`, `os wifi`, `os speed`, `os diag`, `os fw` |
+| **Services** | `os svc`, `os health`, `os boot-analyze` |
+| **Storage** | `os persist`, `os snapshot`, `os vault`, `os trash` |
+| **Packages** | `os pkg install/remove/search/update`, `os update` |
+| **Dev** | `os dev`, `os container`, `os vm`, `os monitor` |
+| **Security** | `os sec`, `os harden`, `os audit` |
+| **AI** | `os ai`, `os chat`, `os codegen` |
+| **Recovery** | `os recover`, `os boot-repair`, `os rollback` |
+| **Media** | `os media`, `os record`, `os qr` |
+| **Build** | `os build`, `os release`, `os ota` |
 
 ---
 
@@ -103,7 +140,6 @@ wsl make build
 | `make clean` | Remove all build artifacts |
 | `make flash DEV=/dev/sdX` | Flash ISO to USB drive |
 | `make qemu` | Boot ISO in QEMU (for testing) |
-| `make install` | Install build dependencies |
 
 ---
 
@@ -116,6 +152,7 @@ Edit files inside `customize/` before building:
 | `customize/packages.list` | Add extra apt packages |
 | `customize/startup.sh` | Run commands on every boot |
 | `customize/motd.txt` | Change the welcome message |
+| `customize/taja*.sh` | TajaOS system modules |
 
 ```bash
 echo "git" >> customize/packages.list
@@ -128,22 +165,33 @@ make build FAST=1
 
 ```
 nexusOS/
-├── nexus-setup.sh              ← Interactive setup TUI (arrow-key menu)
+├── nexus-setup.sh              ← Interactive setup TUI
 ├── makebuild.sh                ← Master build script
 ├── install-deps.sh             ← Linux dependency installer
 ├── install-deps.bat            ← Windows WSL installer
-├── Makefile                    ← Build system (make build / clean / flash)
-├── boot/
-│   └── grub/
-│       └── grub.cfg            ← GRUB bootloader config
+├── Makefile                    ← Build system
+├── boot/grub/grub.cfg          ← GRUB bootloader config
 ├── customize/
-│   ├── packages.list           ← Extra packages to install
-│   ├── startup.sh              ← Custom boot-time script
+│   ├── tajaos.sh               ← Main TajaOS command
+│   ├── tajados-core.sh         ← Config & profile system
+│   ├── tajanet.sh              ← Network manager
+│   ├── tajainit.sh             ← Service manager
+│   ├── tajahook.sh             ← Hook system
+│   ├── tajapkg.sh              ← Package manager
+│   ├── tajadev.sh              ← Developer toolkit
+│   ├── tajaai.sh               ← AI toolkit
+│   ├── tajasec.sh              ← Security toolkit
+│   ├── tajados-persist.sh      ← Persistence manager
+│   ├── tajamon.sh              ← System monitor
+│   ├── tajashell.sh            ← TUI shell
+│   ├── tajarecover.sh          ← Recovery tools
+│   ├── tajamedia.sh            ← Media tools
+│   ├── tajabuild.sh            ← Build pipeline
+│   ├── packages.list           ← Extra apt packages
+│   ├── startup.sh              ← Boot-time script
 │   ├── motd.txt                ← Welcome message
 │   └── README.md               ← Customization guide
-└── .github/
-    └── workflows/
-        └── build.yml           ← Auto-build & release on push
+└── .github/workflows/build.yml ← Auto-build & release
 ```
 
 ---
@@ -159,8 +207,7 @@ nexusOS/
 | Root FS | squashfs (XZ compressed) |
 | Live system | live-boot + live-config |
 | Auto-login | root shell on tty1 |
-| Pre-installed | ALSA, PulseAudio, BlueZ, Wi-Fi tools |
-| Setup tool | `nexus-setup` — TUI with arrow-key navigation |
+| TajaOS Shell | 'os' unified CLI with TUI |
 | ISO Size | ~280 MB |
 
 ---
@@ -181,7 +228,7 @@ nexusOS/
 **GRUB says `file /boot/vmlinuz not found`**
 → Re-flash the ISO. The USB may not have been written correctly.
 ```bash
-sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress && sync
+sudo dd if=tajaos.iso of=/dev/sdX bs=4M status=progress && sync
 ```
 
 **Build fails on squashfs step**
@@ -190,11 +237,8 @@ sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress && sync
 make build CLEAN=1
 ```
 
-**GUI apps won't start**
-→ Xorg may not have initialized. Run:
-```bash
-startx
-```
+**TajaOS command not found**
+→ Modules are installed during build in `/usr/local/lib/tajados/`
 
 ---
 

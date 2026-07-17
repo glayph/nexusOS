@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-#  NEXUS OS — One-Click Dependency Installer (Linux / WSL)
+#  TAJAOS — One-Click Dependency Installer (Linux / WSL)
 #  Usage: sudo bash install-deps.sh
 # ============================================================
 
@@ -14,7 +14,7 @@ echo "  ██╔██╗ ██║█████╗   ╚███╔╝ █�
 echo "  ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║"
 echo "  ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║"
 echo "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"
-echo -e "${N}  Nexus OS — Dependency Installer"
+echo -e "${N}  TajaOS — Dependency Installer"
 echo ""
 
 [[ $EUID -ne 0 ]] && echo -e "${R}[ERROR] Run as root: sudo bash install-deps.sh${N}" && exit 1
@@ -84,7 +84,7 @@ if $ALL_OK; then
   echo -e "${G}✅ All dependencies installed successfully!${N}"
   echo ""
   echo "  Next steps:"
-  echo "    make build          ← Build nexus.iso"
+  echo "    make build          ← Build tajaos.iso"
   echo "    make build CLEAN=1  ← Fresh build"
   echo "    make help           ← See all options"
 else

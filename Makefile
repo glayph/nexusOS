@@ -1,5 +1,5 @@
 # ============================================================
-#  NEXUS OS — Build System
+#  TAJAOS — Build System
 #  Usage: make [target]
 # ============================================================
 
@@ -10,10 +10,10 @@ all: help
 
 help:
 	@echo ""
-	@echo "  NEXUS OS Build System"
+	@echo "  TAJAOS Build System"
 	@echo "  ─────────────────────────────────────────────"
 	@echo "  make install        Install build dependencies"
-	@echo "  make build          Build nexus.iso"
+  @echo "  make build          Build tajaos.iso"
 	@echo "  make build CLEAN=1  Fresh build (delete rootfs)"
 	@echo "  make build FAST=1   Skip squashfs rebuild"
 	@echo "  make clean          Remove all build artifacts"
@@ -25,7 +25,7 @@ help:
 	@echo ""
 
 install:
-	@echo "[NEXUS] Installing dependencies..."
+	@echo "[TAJAOS] Installing dependencies..."
 	@sudo bash install-deps.sh
 
 build:
@@ -38,25 +38,25 @@ build:
 	fi
 
 clean:
-	@echo "[NEXUS] Cleaning build artifacts..."
-	@sudo rm -rf rootfs iso core.img bios.img efiboot.img nexus.iso
-	@echo "[NEXUS] Clean done."
+  @echo "[TAJAOS] Cleaning build artifacts..."
+	@sudo rm -rf rootfs iso core.img bios.img efiboot.img tajaos.iso
+	@echo "[TAJAOS] Clean done."
 
 flash:
 	@if [ -z "$(DEV)" ]; then \
 	    echo "Usage: make flash DEV=/dev/sdX"; \
 	    exit 1; \
 	fi
-	@echo "[NEXUS] Flashing nexus.iso to $(DEV)..."
-	@sudo dd if=nexus.iso of=$(DEV) bs=4M status=progress && sync
-	@echo "[NEXUS] Flash complete! Eject and boot."
+	@echo "[TAJAOS] Flashing tajaos.iso to $(DEV)..."
+	@sudo dd if=tajaos.iso of=$(DEV) bs=4M status=progress && sync
+	@echo "[TAJAOS] Flash complete! Eject and boot."
 
 qemu:
 	@command -v qemu-system-x86_64 >/dev/null || (echo "Install: apt install qemu-system-x86"; exit 1)
-	@echo "[NEXUS] Starting QEMU test..."
-	qemu-system-x86_64 \
+	@echo "[TAJAOS] Starting QEMU test..."
+  qemu-system-x86_64 \
 	  -m 2048 \
-	  -cdrom nexus.iso \
+	  -cdrom tajaos.iso \
 	  -boot d \
 	  -enable-kvm \
 	  -nographic \
@@ -64,7 +64,7 @@ qemu:
 
 lint:
 	@command -v shellcheck >/dev/null || (echo "Install: apt install shellcheck"; exit 1)
-	@echo "[NEXUS] Running shellcheck on all scripts..."
+	@echo "[TAJAOS] Running shellcheck on all scripts..."
 	@shellcheck makebuild.sh install-deps.sh nexus-setup.sh
 
 shellcheck: lint

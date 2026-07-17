@@ -1,4 +1,4 @@
-name: Build Nexus OS ISO
+name: Build TajaOS ISO
 
 on:
   push:
@@ -29,9 +29,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: rootfs
-          key: nexus-rootfs-${{ hashFiles('boot/**', 'customize/**', 'install-deps.sh', 'nexus-setup.sh', 'makebuild.sh') }}
+          key: tajaos-rootfs-${{ hashFiles('boot/**', 'customize/**', 'install-deps.sh', 'nexus-setup.sh', 'makebuild.sh') }}
           restore-keys: |
-            nexus-rootfs-
+            tajaos-rootfs-
 
       - name: Install dependencies
         run: sudo bash install-deps.sh
@@ -47,11 +47,26 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: "Nexus OS v1.0.${{ github.run_number }}"
+          tag_name: v2.0.${{ github.run_number }}
+          name: "TajaOS v2.0.${{ github.run_number }}"
           body: |
             Download nexus.iso below and flash to USB or boot in a VM.
             Flash: sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress
+
+            What's new:
+            - Complete TajaOS system with unified 'os' command
+            - TajaNet - network manager with Wi-Fi, Ethernet, VPN, DNS, proxy, firewall
+            - TajaInit - service manager with health monitoring
+            - TajaPkg - package manager with offline cache
+            - TajaDev - containers, VMs, templates
+            - TajaAI - local LLM and code generation
+            - TajaSec - encrypted vault, hardening, audit
+            - TajaPersist - persistence manager with snapshots
+            - Tajamon - system monitoring dashboard
+            - TajaShell - TUI with keyboard navigation
+            - TajaRecover - recovery tools and system health
+            - TajaMedia - media conversion, OCR, QR, benchmarks
+            - TajaBuild - ISO build and release pipeline
           files: |
             nexus.iso
             SHA256SUMS

@@ -1,17 +1,30 @@
 #!/bin/bash
 # ============================================================
-#  NEXUS OS — Custom Startup Script
-#  Boot হওয়ার পর, Nexus agent চালু হওয়ার আগে run হবে
-#  এখানে তোমার custom commands লেখো
+#  TajaOS — Custom Startup Script
+#  Initializes TajaOS system modules on boot
 # ============================================================
 
-# Example: network interface চেক করো
-# ip link set eth0 up 2>/dev/null || true
+# Initialize TajaOS core config
+if [[ -x /usr/local/bin/tajados ]]; then
+  tajados init 2>/dev/null || true
+fi
 
-# Example: কোনো service চালু করো
-# systemctl start ssh 2>/dev/null || true
+# Install TajaOS built-in hooks
+if [[ -x /usr/local/bin/tajahook ]]; then
+  tajahook install-builtin 2>/dev/null || true
+fi
 
-# Example: environment variable set করো
-# export MY_PROJECT="/opt/myproject"
+# Load saved session
+if [[ -f /var/lib/tajados/runtime/active_services ]]; then
+  while read -r svc; do
+    systemctl start "$svc" 2>/dev/null || true
+  done < /var/lib/tajados/runtime/active_services
+fi
 
-echo "[Nexus] Custom startup complete."
+# Check persistence
+if [[ -f /persist.img ]]; then
+  /usr/local/bin/tajados-persist mount 2>/dev/null || true
+fi
+
+echo "[TajaOS] System initialized"
+echo "[TajaOS] Type 'os' for help, 'os setup' for configuration"

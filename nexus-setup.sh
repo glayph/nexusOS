@@ -6,10 +6,10 @@ R=$(printf '\033[91m'); B=$(printf '\033[1m'); D=$(printf '\033[2m')
 N=$(printf '\033[0m')
 A_GUI=0; A_DM=""; A_USER=""
 
-PRE_INSTALLED="alsa-utils pulseaudio wireless-tools wpasupplicant iw bluez bluez-tools"
+PRE_INSTALLED=""
 
 menu() {
-  whiptail --title "Nexus OS Setup" --menu "$1" 20 60 "$2" "${@:3}" 3>&1 1>&2 2>&3
+  whiptail --title "TajaOS Setup" --menu "$1" 20 60 "$2" "${@:3}" 3>&1 1>&2 2>&3
 }
 
 yesno() {
@@ -50,26 +50,16 @@ is_installed() {
 
 drivers_menu() {
   local choices
-  choices=$(whiptail --title "Drivers & Hardware" --checklist "Toggle drivers (already installed=ON, uncheck to remove):" 18 64 6 \
-    "1" "Audio (ALSA + PulseAudio)" ON \
-    "2" "GPU (mesa + vulkan)" OFF \
+  choices=$(whiptail --title "Drivers & Hardware" --checklist "Select drivers to install:" 18 64 6 \
+    "1" "Audio (ALSA + PulseAudio)" OFF \
+    "2" "GPU (mesa + vulkan + xorg drivers)" OFF \
     "3" "Wi-Fi firmware (iwlwifi, realtek, brcm)" OFF \
     "4" "Firmware (misc-nonfree, for real GPUs)" OFF \
-    "5" "Remove ALL pre-installed drivers" OFF \
-    "6" "Re-install kernel (restore modules)" ON \
+    "5" "Bluetooth (bluez + bluez-tools)" OFF \
+    "6" "Re-install kernel (restore modules)" OFF \
     3>&1 1>&2 2>&3)
 
   [[ -z "$choices" ]] && return
-
-  if [[ "$choices" == *"5"* ]]; then
-    if yesno "Remove Drivers" "Remove all pre-installed drivers (audio, wifi, bluetooth)?"; then
-      msg "Removing" "Removing pre-installed drivers..."
-      apt_remove $PRE_INSTALLED
-      pm-cmd cache --purge 2>/dev/null || true
-      msg "Done" "Pre-installed drivers removed."
-    fi
-    return
-  fi
 
   if [[ "$choices" == *"6"* ]]; then
     msg "Restoring" "Restoring kernel modules..."
@@ -82,6 +72,7 @@ drivers_menu() {
   [[ "$choices" == *"2"* ]] && install+=" mesa-utils mesa-vulkan-drivers xserver-xorg-video-all libgl1-mesa-dri"
   [[ "$choices" == *"3"* ]] && install+=" firmware-brcm80211 firmware-iwlwifi firmware-realtek"
   [[ "$choices" == *"4"* ]] && install+=" firmware-misc-nonfree"
+  [[ "$choices" == *"5"* ]] && install+=" bluez bluez-tools"
 
   if [[ -n "$install" ]]; then
     msg "Installing" "Installing selected drivers..."
@@ -89,35 +80,6 @@ drivers_menu() {
     msg "Done" "Additional drivers installed."
   fi
 
-}
-
-remove_drivers() {
-  whiptail --title "Remove Drivers" --checklist "Select what to remove:" 16 64 5 \
-    "1" "Audio (alsa-utils, pulseaudio)" ON \
-    "2" "Wi-Fi (wireless-tools, wpasupplicant, iw)" OFF \
-    "3" "Bluetooth (bluez, bluez-tools)" OFF \
-    "4" "GPU drivers & firmware" OFF \
-    "5" "ALL pre-installed drivers" OFF \
-    3>&1 1>&2 2>&3
-
-  [[ -z "$choices" ]] && return
-
-  local rm_pkgs=""
-  [[ "$choices" == *"1"* ]] && rm_pkgs+=" alsa-utils pulseaudio"
-  [[ "$choices" == *"2"* ]] && rm_pkgs+=" wireless-tools wpasupplicant iw"
-  [[ "$choices" == *"3"* ]] && rm_pkgs+=" bluez bluez-tools"
-  [[ "$choices" == *"4"* ]] && rm_pkgs+=" mesa-utils mesa-vulkan-drivers xserver-xorg-video-all libgl1-mesa-dri firmware-misc-nonfree"
-  [[ "$choices" == *"5"* ]] && rm_pkgs="$PRE_INSTALLED"
-
-  if [[ -z "$rm_pkgs" ]]; then
-    msg "Nothing" "No packages selected."
-    return
-  fi
-
-  if yesno "Confirm Remove" "Remove:\n$rm_pkgs\n\nThis will free up space."; then
-    apt_remove $rm_pkgs
-    msg "Done" "Selected drivers removed."
-  fi
 }
 
 de_menu() {
@@ -251,7 +213,7 @@ OVL
 }
 
 install_all() {
-  whiptail --title "Install All" --yesno "Install:\n- Full GPU drivers + firmware\n- Wi-Fi firmware\n- XFCE Desktop\n- LightDM\n- Create user 'nexus'\n- Persistence" 14 50
+  whiptail --title "Install All" --yesno "Install:\n- Full GPU drivers + firmware\n- Wi-Fi firmware\n- XFCE Desktop\n- LightDM\n- Create user 'tajaos'\n- Persistence" 14 50
   [[ $? -ne 0 ]] && return
 
   msg "Install All" "Full installation in progress..."
@@ -259,9 +221,9 @@ install_all() {
     libgl1-mesa-dri firmware-brcm80211 firmware-iwlwifi firmware-realtek
   apt_install xfce4 xfce4-terminal thunar lightdm lightdm-gtk-greeter
   echo "exec startxfce4" > /root/.xinitrc
-  run useradd -m -G sudo -s /bin/bash nexus 2>&1 || true
-  echo "nexus:nexus" | chpasswd
-  A_GUI=1; A_DM="lightdm"; A_USER="nexus"
+  run useradd -m -G sudo -s /bin/bash tajaos 2>&1 || true
+  echo "tajaos:tajaos" | chpasswd
+  A_GUI=1; A_DM="lightdm"; A_USER="tajaos"
   run systemctl enable lightdm 2>&1
   persistence_setup
 
@@ -269,18 +231,103 @@ install_all() {
   if yesno "Reboot?" "Reboot now?"; then reboot; fi
 }
 
+system_doctor() {
+  msg "System Doctor" "Running system health check..."
+  echo -e "\n${C}=== System Health Report ===${N}"
+  echo -e "${C}Date:${N} $(date)"
+  echo -e "${C}Uptime:${N} $(uptime -p 2>/dev/null || uptime)"
+  echo -e "${C}Kernel:${N} $(uname -r)"
+  echo -e "${C}Hostname:${N} $(hostname)"
+  echo -e "\n${C}=== CPU ===${N}"
+  lscpu | grep -E 'Model name|CPU\(s\)|Thread|Core|Socket|MHz'
+  echo -e "\n${C}=== Memory ===${N}"
+  free -h
+  echo -e "\n${C}=== Disk ===${N}"
+  df -h / | head -2
+  lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | head -20
+  echo -e "\n${C}=== Network ===${N}"
+  ip -br addr
+  echo -e "\n${C}=== Services ===${N}"
+  systemctl list-units --failed --no-legend 2>/dev/null | head -10
+  echo -e "\n${C}=== Temperature ===${N}"
+  sensors 2>/dev/null | head -20 || echo "lm-sensors not installed"
+  echo -e "\n${C}=== Battery ===${N}"
+  upower -i /org/freedesktop/UPower/devices/battery_BAT0 2>/dev/null | head -10 || echo "No battery or upower not installed"
+  echo -e "\n${C}=== GPU ===${N}"
+  lspci | grep -i vga || echo "No GPU detected"
+  echo -e "\n${C}=== Systemd Analyze ===${N}"
+  systemd-analyze blame 2>/dev/null | head -10 || true
+  whiptail --title "System Doctor" --msgbox "Health check complete. See terminal for details." 10 60
+}
+
+theme_menu() {
+  local sel
+  sel=$(menu "Theme Switcher" 4 \
+    "1" "Default (Cyan/Blue)" \
+    "2" "Dark Green (Hacker)" \
+    "3" "Amber (Retro)" \
+    "4" "Monochrome (Minimal)")
+
+  [[ -z "$sel" ]] && return
+
+  case "$sel" in
+    1) THEME="default"; PROMPT_COLOR='\[\033[96m\]';;
+    2) THEME="green"; PROMPT_COLOR='\[\033[92m\]';;
+    3) THEME="amber"; PROMPT_COLOR='\[\033[93m\]';;
+    4) THEME="mono"; PROMPT_COLOR='\[\033[97m\]';;
+  esac
+
+  cat > /root/.bashrc << BASHRC
+# —— prompt ——
+PS1='${PROMPT_COLOR}\u@\h\[\033[0m\]:\[\033[97m\]\w\[\033[0m\]\$ '
+
+# —— ls ——
+eval "\$(dircolors -b 2>/dev/null)"
+alias ls='ls --color=auto'
+alias ll='ls -lh'
+alias la='ls -A'
+alias l='ls -CF'
+
+# —— utils ——
+alias grep='grep --color=auto'
+alias h='history'
+alias q='exit'
+alias ..='cd ..'
+alias cls='clear'
+alias ip='ip -c'
+alias df='df -h'
+alias du='du -sh'
+alias free='free -h'
+alias nano='nano -l'
+
+# —— env ——
+export EDITOR=nano
+
+# —— completion ——
+[ -f /usr/share/bash-completion/bash_completion ] && \
+  . /usr/share/bash-completion/bash_completion
+BASHRC
+
+  cp /root/.bashrc /root/.bash_profile
+  mkdir -p /etc/skel
+  cp /root/.bashrc /etc/skel/
+  cp /root/.bash_profile /etc/skel/
+  msg "Theme Applied" "Theme '$THEME' applied. Restart shell or run: source ~/.bashrc"
+}
+
 main_menu() {
   while true; do
     local sel
-    sel=$(menu "Configure your system" 10 \
-      "1" "Drivers & Hardware (install/remove audio, wifi, bt, gpu)" \
+    sel=$(menu "Configure your system" 9 \
+      "1" "Drivers & Hardware (install audio, wifi, bt, gpu)" \
       "2" "Desktop Environment (XFCE, MATE, GNOME, KDE)" \
       "3" "Display Manager (LightDM, GDM, SDDM)" \
       "4" "Create User Account" \
       "5" "Setup Persistence (save across reboots)" \
       "6" "Install ALL — Full Desktop" \
-      "7" "Uninstall Drivers & Rollback" \
-      "8" "Exit")
+      "7" "System Doctor (health check)" \
+      "8" "Theme & Theme Switcher" \
+      "9" "Exit")
 
     case "$sel" in
       1) drivers_menu;;
@@ -289,8 +336,9 @@ main_menu() {
       4) create_user;;
       5) persistence_setup;;
       6) install_all;;
-      7) remove_drivers;;
-      8) break;;
+      7) system_doctor;;
+      8) theme_menu;;
+      9) break;;
       *) break;;
     esac
   done
