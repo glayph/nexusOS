@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Nexus OS — Package Manager Wrapper"""
+import subprocess, sys
+
+C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"
+def run(cmd): return subprocess.run(cmd, shell=True)
+
+HELP = f"""
+{B}{C}nexus-pkg{N} — Nexus OS Package Manager
+
+  {B}Usage:{N}
+    nexus-pkg install  <pkg>   Install a package
+    nexus-pkg remove   <pkg>   Remove a package
+    nexus-pkg search   <query> Search packages
+    nexus-pkg list             List installed packages
+    nexus-pkg update           Update package lists
+    nexus-pkg upgrade          Upgrade all packages
+    nexus-pkg info     <pkg>   Show package info
+    nexus-pkg clean            Clean package cache
+    nexus-pkg autoremove       Remove unused packages
+
+  {B}Examples:{N}
+    nexus-pkg install git
+    nexus-pkg search python3
+    nexus-pkg info tmux
+"""
+
+if len(sys.argv) < 2:
+    print(HELP); sys.exit(0)
+
+cmd = sys.argv[1]
+pkg = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else ""
+
+cmds = {
+    "install":     f"apt-get install -y {pkg}",
+    "remove":      f"apt-get remove -y {pkg}",
+    "purge":       f"apt-get purge -y {pkg}",
+    "search":      f"apt-cache search {pkg} | head -30",
+    "list":        "dpkg -l | grep '^ii' | awk '{print $2, $3}' | column -t | less",
+    "update":      "apt-get update",
+    "upgrade":     "apt-get upgrade -y",
+    "info":        f"apt-cache show {pkg}",
+    "clean":       "apt-get clean && apt-get autoclean",
+    "autoremove":  "apt-get autoremove -y",
+}
+
+if cmd in cmds:
+    print(f"\n{C}[nexus-pkg]{N} {cmds[cmd]}\n")
+    run(cmds[cmd])
+else:
+    print(f"{R}Unknown command: {cmd}{N}")
+    print(HELP)
