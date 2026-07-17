@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Nexus OS — System Health Check (os doctor)"""
+import subprocess, os, sys, time
+
+C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"
+
+def run(cmd):
+    try:
+        return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=5).stdout.strip()
+    except: return "N/A"
+
+def check(label, cmd, ok_fn=None):
+    val = run(cmd)
+    status = G+"✅"+N if (ok_fn(val) if ok_fn else val) else R+"❌"+N
+    print(f"  {status}  {label:<22} {val or 'N/A'}")
+    return bool(val)
+
+print(f"\n{B}{C}╔══════════════════════════════════════════════╗{N}")
+print(f"{B}{C}║        NEXUS OS — SYSTEM HEALTH CHECK        ║{N}")
+print(f"{B}{C}╚══════════════════════════════════════════════╝{N}\n")
+
+print(f"{C}── System ─────────────────────────────────────{N}")
+check("OS",            "cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"'")
+check("Kernel",        "uname -r")
+check("Uptime",        "uptime -p")
+check("Architecture",  "uname -m")
+
+print(f"\n{C}── Resources ───────────────────────────────────{N}")
+check("CPU cores",     "nproc")
+check("Load avg",      "cut -d' ' -f1-3 /proc/loadavg")
+check("Memory free",   "free -h | grep Mem | awk '{print $4\" free of \"$2}'")
+check("Disk /",        "df -h / | tail -1 | awk '{print $4\" free  (\"$5\" used)\"}'")
+check("Swap",          "free -h | grep Swap | awk '{print $2}' | grep -v '^0' || echo 'none'")
+
+print(f"\n{C}── Network ─────────────────────────────────────{N}")
+check("Default route", "ip route | grep default | awk '{print \"via \"$3}' | head -1")
+check("IP address",    "hostname -I | awk '{print $1}'")
+check("DNS",           "nslookup google.com 2>/dev/null | grep Address | tail -1 | awk '{print $2}'",
+      lambda v: v and "8." in v or "1." in v or len(v) > 3)
+check("Internet",      "curl -s --max-time 4 https://1.1.1.1 > /dev/null && echo 'reachable' || echo 'unreachable'",
+      lambda v: v == "reachable")
+
+print(f"\n{C}── Nexus Services ──────────────────────────────{N}")
+check("Agent config",  "test -f /etc/nexus/agent.conf && echo 'present' || echo 'missing'", lambda v: v=="present")
+check("Skills dir",    "test -d /opt/nexus/skills && ls /opt/nexus/skills/*.py 2>/dev/null | wc -l | awk '{print $1\" skills\"}'")
+check("API key",       "test -f /etc/nexus/api.key && echo 'configured' || echo 'not set'", lambda v: v=="configured")
+check("Audit log",     "test -f /var/log/nexus/audit.log && echo 'active' || echo 'not found'")
+check("Python3",       "python3 --version")
+check("Tmux",          "tmux -V 2>/dev/null || echo 'not installed'")
+
+print(f"\n{C}── Storage ─────────────────────────────────────{N}")
+for line in run("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | grep -v loop").split("\n"):
+    print(f"  {line}")
+
+print(f"\n{B}{'─'*48}{N}")
+print(f"  Report time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print(f"  Run 'nexus-monitor' for live dashboard\n")
