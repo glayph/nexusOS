@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""TajaOS — Live Monitoring Dashboard"""
+"""TajaOS — Live Monitoring Dashboard
+Optimized CLI with Mono Font Support"""
 import subprocess, os, time, sys
 
 def run(cmd):
@@ -10,7 +11,7 @@ def clear(): sys.stdout.write("\033[2J\033[H"); sys.stdout.flush()
 
 C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"; D="\033[2m"
 
-def bar(pct, width=20):
+def bar(pct, width=25):
     pct = min(100, max(0, pct))
     filled = int(width * pct / 100)
     color = G if pct < 60 else Y if pct < 85 else R
@@ -36,7 +37,7 @@ def disk_pct(path="/"):
     used  = (s.f_blocks - s.f_bfree) * s.f_frsize
     return used/total*100 if total else 0, total//1024//1024//1024, used//1024//1024//1024
 
-print(f"{C}Starting TajaOS Monitor... (Ctrl+C to exit){N}")
+print(f"\n{C}🚀 Starting TajaOS Monitor... (Ctrl+C to exit){N}\n")
 try:
     while True:
         clear()
@@ -56,23 +57,23 @@ try:
         net_iface = next((l for l in net_lines if "eth0" in l or "ens" in l or "enp" in l), None)
         if net_iface:
             parts = net_iface.split(); rx, tx = int(parts[1])//1024, int(parts[9])//1024
-            net_str = f"RX {rx}KB  TX {tx}KB"
+            net_str = f"📥 {rx}KB  📤 {tx}KB"
         else:
             net_str = "No network interface"
 
-        print(f"\n{B}{C}╔══════ TAJAOS — LIVE MONITOR ═════════════════════╗{N}")
-        print(f"{B}{C}║{N}  {now}   {D}{hostname}   {ip}{N}")
-        print(f"{B}{C}║{N}  Uptime: {uptime}   Load: {load}   Procs: {procs}")
-        print(f"{B}{C}╠══════════════════════════════════════════════════╣{N}")
-        print(f"{B}{C}║{N}  {B}CPU {N}  {bar(cpu)}")
-        print(f"{B}{C}║{N}  {B}MEM {N}  {bar(mp)}  {mused}/{mtotal} MB")
-        print(f"{B}{C}║{N}  {B}DISK{N}  {bar(dp)}  {dused}/{dtotal} GB")
-        print(f"{B}{C}║{N}  {B}NET {N}  {D}{net_str}{N}")
-        print(f"{B}{C}╠══════ TOP PROCESSES ══════════════════════════════╣{N}")
-        procs_out = run("ps aux --sort=-%cpu | head -8 | awk 'NR>1{printf \"  %-20s CPU:%-5s MEM:%s\\n\",$11,$3,$4}'")
+        print(f"\n{B}{C}╔═══════ 🖥️  TAJAOS — LIVE MONITOR ═══════════════════╗{N}")
+        print(f"{B}{C}║{N}  🕐 {now}   {D}{hostname}   {ip}{N}")
+        print(f"{B}{C}║{N}  ⏱️ Uptime: {uptime}   📊 Load: {load}   🔹 Procs: {procs}")
+        print(f"{B}{C}╠══════════════════════════════════════════════════════╣{N}")
+        print(f"{B}{C}║{N}  {B}🖥️ CPU {N}  {bar(cpu)}")
+        print(f"{B}{C}║{N}  {B}💾 MEM {N}  {bar(mp)}  {mused}/{mtotal} MB")
+        print(f"{B}{C}║{N}  {B}💿 DISK{N}  {bar(dp)}  {dused}/{dtotal} GB")
+        print(f"{B}{C}║{N}  {B}🌐 NET {N}  {D}{net_str}{N}")
+        print(f"{B}{C}╠═══════ 🔝 TOP PROCESSES ══════════════════════════════╣{N}")
+        procs_out = run("ps aux --sort=-%cpu | head -8 | awk 'NR>1{printf \"  %-22s CPU:%-5s MEM:%s\\n\",$11,$3,$4}'")
         print(procs_out)
-        print(f"{B}{C}╚══════════════════════════════════════════════════╝{N}")
-        print(f"\n  {D}Refresh: 2s   Ctrl+C to exit   'taja-doctor' for full report{N}")
+        print(f"{B}{C}╚══════════════════════════════════════════════════════╝{N}")
+        print(f"\n  {D}🔄 Refresh: 2s   Ctrl+C to exit   'taja-doctor' for full report{N}\n")
         time.sleep(2)
 except KeyboardInterrupt:
-    print(f"\n{Y}Monitor stopped.{N}")
+    print(f"\n{Y}⏹️  Monitor stopped.{N}\n")

@@ -2,6 +2,7 @@
 """
 TajaOS Agent v2.0 — AI Assistant
 Pluggable AI provider: Anthropic | OpenAI | Local | External
+Optimized CLI with Mono Font Support
 """
 import os, sys, re, json, time, subprocess, socket, importlib.util
 from datetime import datetime
@@ -92,7 +93,14 @@ def is_destructive(cmd):
 
 def confirm(prompt):
     try:
-        return input(f"{Y}[CONFIRM] {prompt} (yes/no): {N}").strip().lower() == "yes"
+        print(f"\n{Y}⚠️  WARNING{N}")
+        for i, line in enumerate(prompt.split('\n'), 1):
+            print(f"   {line}")
+        while True:
+            resp = input(f"\n{B}Type 'yes' to confirm:{N} ").strip().lower()
+            if resp == 'yes': return True
+            if resp == 'no': return False
+            print(f"{R}Please type 'yes' or 'no'{N}")
     except (EOFError, KeyboardInterrupt):
         return False
 
@@ -100,15 +108,16 @@ def confirm(prompt):
 def run_cmd(cmd, cfg):
     audit(f"EXEC: {cmd}", cfg)
     if cfg.get("CONFIRM_DESTRUCTIVE","true") == "true" and is_destructive(cmd):
-        if not confirm(f"Destructive command: {cmd}"):
-            return "[TAJA] Command cancelled."
+        if not confirm(f"Destructive command detected:\n  → {cmd}"):
+            return f"{R}[TAJA] Command cancelled by user.{N}"
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
-        return ((r.stdout or "") + (r.stderr or "")).strip()[:3000] or "(no output)"
+        output = ((r.stdout or "") + (r.stderr or "")).strip()[:3000]
+        return output if output else f"{D}(no output){N}"
     except subprocess.TimeoutExpired:
-        return "[TAJA] Timed out (30s)"
+        return f"{R}[TAJA] Timed out (30s){N}"
     except Exception as e:
-        return f"[TAJA] Error: {e}"
+        return f"{R}[TAJA] Error: {e}{N}"
 
 # ── Memory store ───────────────────────────────────────────────────────────────
 MEMORY_FILE = Path("/etc/tajados/memory.json")
@@ -207,12 +216,13 @@ def sysinfo():
     def q(cmd):
         try: return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=3).stdout.strip()
         except: return "?"
-    with open("/proc/uptime") as f: s=float(f.read().split()[0])
-    print(f"\n{D}  Host   : {q('hostname')} | {q('hostname -I').split()[0] if q('hostname -I') else 'no IP'}")
-    print(f"  Kernel : {q('uname -r')}")
-    print(f"  Uptime : {int(s//3600)}h {int((s%3600)//60)}m | Load: {q('cut -d\" \" -f1-3 /proc/loadavg')}")
-    print(f"  Memory : {q('free -h | grep Mem | awk \"{print $3\\\"/\\\"$2}\"')}")
-    print(f"  Disk   : {q('df -h / | tail -1 | awk \"{print $3\\\"/\\\"$2}\"')}{N}\n")
+    print(f"\n{D}╭────────────────────────────────────────────────────────────╮{N}")
+    print(f"{D}│{N}  {B}Host   :{N} {q('hostname'):<40} {D}|{N} {q('hostname -I').split()[0] if q('hostname -I') else 'no IP'}")
+    print(f"{D}│{N}  {B}Kernel :{N} {q('uname -r'):<46}")
+    print(f"{D}│{N}  {B}Uptime :{N} {int(float(open('/proc/uptime').read().split()[0])//3600)}h {int((float(open('/proc/uptime').read().split()[0])%3600)//60)}m  {D}|{N}  Load: {q('cut -d\" \" -f1-3 /proc/loadavg')}")
+    print(f"{D}│{N}  {B}Memory :{N} {q('free -h | grep Mem | awk \"{print $3\\\"/\\\"$2}\"'):<42}")
+    print(f"{D}│{N}  {B}Disk   :{N} {q('df -h / | tail -1 | awk \"{print $3\\\"/\\\"$2}\"'):<42}")
+    print(f"{D}╰────────────────────────────────────────────────────────────╯{N}\n")
 
 # ── Status bar ─────────────────────────────────────────────────────────────────
 def status_bar(cfg):
@@ -220,7 +230,9 @@ def status_bar(cfg):
         with open("/proc/loadavg") as f: load=f.read().split()[0]
         ts = datetime.now().strftime("%H:%M:%S")
         provider = cfg.get("AGENT_PROVIDER","?")
-        print(f"{D}[{ts}] load:{load}  agent:{provider}{N}")
+        print(f"\n{D}╔════════════════════════════════════════════╗{N}")
+        print(f"{D}║{N}  ⏱️  {ts}   📊 load: {load:<6}   🤖 agent: {provider:<12} {D}{N}")
+        print(f"{D}╚════════════════════════════════════════════╝{N}", end="\r")
     except: pass
 
 # ── Skill intent matching ──────────────────────────────────────────────────────
@@ -296,29 +308,48 @@ def main():
 
         if user_input.lower() == "help":
             print(f"""
+{B}{C}╔══════════════════════════════════════════════╗{N}
+{B}{C}║          TajaOS 2.0 — Command Help           ║{N}
+{B}{C}╚══════════════════════════════════════════════╝{N}
+
 {C}Built-in commands:{N}
-  sysinfo / status  — System information
-  clear             — Clear screen
-  memory            — Show stored preferences
-  memory set k=v    — Store a preference
-  skills            — List loaded skills
-  help              — This help
-  exit              — Quit
+  sysinfo / status   — System information
+  clear              — Clear screen
+  memory             — Show stored preferences
+  memory set k=v     — Store a preference
+  skills             — List loaded skills
+  help               — This help
+  exit               — Quit
 
 {C}Utility commands:{N}
-  taja-doctor       — Full health check
-  taja-monitor      — Live dashboard
-  taja-pkg          — Package manager
-  taja-skill        — Plugin manager
+  taja-doctor        — Full health check
+  taja-monitor       — Live dashboard
+  taja-pkg           — Package manager
+  taja-skill         — Plugin manager
+
+{D}💡 Tip: Use 'os' command for unified system management{N}
 """); continue
 
         if user_input.lower() == "skills":
-            print(f"\n{C}Loaded skills ({len(skills)}):{N}")
-            for k in sorted(skills): print(f"  • {k}")
-            print(); continue
+            print(f"\n{B}{C}╔══════════════════════════════════════════════╗{N}")
+            print(f"{B}{C}║         Loaded Skills ({len(skills):>3})                  ║{N}")
+            print(f"{B}{C}╚══════════════════════════════════════════════╝{N}\n")
+            for k in sorted(skills): 
+                print(f"  {G}▸{N}  {k}")
+            print()
+            continue
 
         if user_input.lower() == "memory":
-            print(json.dumps(memory, indent=2) if memory else "  (empty)"); continue
+            if memory:
+                print(f"\n{B}{C}╔══════════════════════════════════════════════╗{N}")
+                print(f"{B}{C}║              Stored Memory                   ║{N}")
+                print(f"{B}{C}╚══════════════════════════════════════════════╝{N}\n")
+                for k, v in memory.items():
+                    print(f"  {G}▸{N}  {B}{k}:{N} {v}")
+                print()
+            else:
+                print(f"\n{D}  (memory is empty){N}\n")
+            continue
 
         if user_input.lower().startswith("memory set "):
             kv = user_input[11:].strip()
@@ -326,7 +357,7 @@ def main():
                 k, _, v = kv.partition("=")
                 memory[k.strip()] = v.strip()
                 save_memory(memory)
-                print(f"{G}[TAJA] Saved: {k.strip()} = {v.strip()}{N}")
+                print(f"\n{G}✅ [TAJA] Saved:{N} {B}{k.strip()}{N} = {v.strip()}\n")
             continue
 
         # ── Skill matching ─────────────────────────────────────────────────
@@ -344,24 +375,35 @@ def main():
         # ── AI or offline ──────────────────────────────────────────────────
         if online:
             conversation.append({"role": "user", "content": user_input})
-            print(f"{D}[TAJA] Processing...{N}")
+            print(f"\n{D}╭──────────────╮{N}")
+            print(f"{D}│{N}  🤔 {C}Processing...{N}")
+            print(f"{D}╰──────────────╯{N}")
             response = call_ai(conversation, cfg, api_key, system_p)
 
             exec_blocks = re.findall(r"<exec>(.*?)</exec>", response, re.DOTALL)
             clean = re.sub(r"<exec>.*?</exec>", "", response, flags=re.DOTALL).strip()
 
-            if clean: print(f"\n{C}[TAJA]{N} {clean}\n")
+            if clean: 
+                print(f"\n{B}{C}╭─ [TAJA] ─────────────────────────────────────╮{N}")
+                for line in clean.split('\n'):
+                    print(f"{B}{C}│{N}  {line}")
+                print(f"{B}{C}╰────────────────────────────────────────────────╯{N}\n")
 
             for cmd in exec_blocks:
                 cmd = cmd.strip()
-                print(f"{Y}[TAJA] Running:{N} {D}{cmd}{N}")
+                print(f"\n{Y}⚙️  [TAJA] Running:{N} {D}{cmd}{N}")
                 out = run_cmd(cmd, cfg)
-                print(f"{D}{out}{N}\n")
+                print(f"\n{D}╭──────────────╮{N}")
+                print(f"{D}│{N}  Output:")
+                for line in out.split('\n')[:20]:
+                    print(f"{D}│{N}    {line}")
+                print(f"{D}╰──────────────╯{N}\n")
                 conversation.append({"role":"assistant","content":response})
                 conversation.append({"role":"user","content":f"Command output:\n{out}"})
                 followup = call_ai(conversation, cfg, api_key, system_p)
                 fc = re.sub(r"<exec>.*?</exec>","",followup,flags=re.DOTALL).strip()
-                if fc: print(f"{C}[TAJA]{N} {fc}\n")
+                if fc: 
+                    print(f"\n{B}{C}│{N}  {fc}\n")
                 conversation.append({"role":"assistant","content":followup})
                 break
             else:
@@ -372,7 +414,12 @@ def main():
         else:
             lower = user_input.lower()
             cmd = next((v for k,v in OFFLINE.items() if k in lower), user_input)
-            print(f"\n{D}{run_cmd(cmd, cfg)}{N}\n")
+            out = run_cmd(cmd, cfg)
+            print(f"\n{D}╭──────────────╮{N}")
+            print(f"{D}│{N}  {C}Offline Mode Output:{N}")
+            for line in out.split('\n')[:20]:
+                print(f"{D}│{N}    {line}")
+            print(f"{D}╰──────────────╯{N}\n")
 
 if __name__ == "__main__":
     main()

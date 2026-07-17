@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""TajaOS — System Health Check (os doctor)"""
+"""TajaOS — System Health Check (os doctor)
+Optimized CLI with Mono Font Support"""
 import subprocess, os, sys, time
 
 C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"
@@ -12,11 +13,11 @@ def run(cmd):
 def check(label, cmd, ok_fn=None):
     val = run(cmd)
     status = G+"✅"+N if (ok_fn(val) if ok_fn else val) else R+"❌"+N
-    print(f"  {status}  {label:<22} {val or 'N/A'}")
+    print(f"  {status}  {label:<24} {val or 'N/A'}")
     return bool(val)
 
 print(f"\n{B}{C}╔══════════════════════════════════════════════╗{N}")
-print(f"{B}{C}║        TAJAOS — SYSTEM HEALTH CHECK          ║{N}")
+print(f"{B}{C}║     🏥 TAJAOS — SYSTEM HEALTH CHECK          ║{N}")
 print(f"{B}{C}╚══════════════════════════════════════════════╝{N}\n")
 
 print(f"{C}── System ─────────────────────────────────────{N}")
@@ -50,8 +51,9 @@ check("Tmux",          "tmux -V 2>/dev/null || echo 'not installed'")
 
 print(f"\n{C}── Storage ─────────────────────────────────────{N}")
 for line in run("lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | grep -v loop").split("\n"):
-    print(f"  {line}")
+    if line.strip():
+        print(f"  {D}▸{N}  {line}")
 
 print(f"\n{B}{'─'*48}{N}")
-print(f"  Report time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-print(f"  Run 'taja-monitor' for live dashboard\n")
+print(f"  📅 Report time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print(f"  💡 Run 'taja-monitor' for live dashboard\n")

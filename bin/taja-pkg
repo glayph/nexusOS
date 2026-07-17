@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
-"""TajaOS — Package Manager Wrapper"""
+"""TajaOS — Package Manager Wrapper
+Optimized CLI with Mono Font Support"""
 import subprocess, sys
 
 C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"
 def run(cmd): return subprocess.run(cmd, shell=True)
 
 HELP = f"""
-{B}{C}taja-pkg{N} — TajaOS Package Manager
+{B}{C}╔══════════════════════════════════════════════╗{N}
+{B}{C}║     📦 taja-pkg — TajaOS Package Manager     ║{N}
+{B}{C}╚══════════════════════════════════════════════╝{N}
 
   {B}Usage:{N}
-    taja-pkg install  <pkg>   Install a package
-    taja-pkg remove   <pkg>   Remove a package
-    taja-pkg search   <query> Search packages
-    taja-pkg list             List installed packages
-    taja-pkg update           Update package lists
-    taja-pkg upgrade          Upgrade all packages
-    taja-pkg info     <pkg>   Show package info
-    taja-pkg clean            Clean package cache
-    taja-pkg autoremove       Remove unused packages
+    taja-pkg install  <pkg>   📥 Install a package
+    taja-pkg remove   <pkg>   🗑️  Remove a package
+    taja-pkg search   <query> 🔍 Search packages
+    taja-pkg list             📋 List installed packages
+    taja-pkg update           🔄 Update package lists
+    taja-pkg upgrade          ⬆️  Upgrade all packages
+    taja-pkg info     <pkg>   ℹ️  Show package info
+    taja-pkg clean            🧹 Clean package cache
+    taja-pkg autoremove       ✂️  Remove unused packages
 
   {B}Examples:{N}
     taja-pkg install git
@@ -45,8 +48,8 @@ cmds = {
 }
 
 if cmd in cmds:
-    print(f"\n{C}[taja-pkg]{N} {cmds[cmd]}\n")
+    print(f"\n{C}📦 [taja-pkg]{N} {cmds[cmd]}\n")
     run(cmds[cmd])
 else:
-    print(f"{R}Unknown command: {cmd}{N}")
+    print(f"{R}❌ Unknown command: {cmd}{N}")
     print(HELP)
