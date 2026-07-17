@@ -11,6 +11,7 @@ on:
       - 'config/**'
       - 'customize/**'
       - 'makebuild.sh'
+      - '.github/**'
   workflow_dispatch:
 
 permissions:
@@ -36,22 +37,22 @@ jobs:
       - name: Install dependencies
         run: sudo bash install-deps.sh
 
-      - name: Build nexus.iso v1.1
+      - name: Build TajaOS ISO
         run: sudo bash makebuild.sh --output ${{ github.workspace }}
 
       - name: ISO info
         run: |
-          ls -lh nexus.iso
-          sha256sum nexus.iso | tee SHA256SUMS
+          ls -lh tajaos.iso
+          sha256sum tajaos.iso | tee SHA256SUMS
 
-      - name: Upload to Release v1.1
+      - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v2.0.${{ github.run_number }}
           name: "TajaOS v2.0.${{ github.run_number }}"
           body: |
-            Download nexus.iso below and flash to USB or boot in a VM.
-            Flash: sudo dd if=nexus.iso of=/dev/sdX bs=4M status=progress
+            Download tajaos.iso below and flash to USB or boot in a VM.
+            Flash: sudo dd if=tajaos.iso of=/dev/sdX bs=4M status=progress
 
             What's new:
             - Complete TajaOS system with unified 'os' command
@@ -68,7 +69,7 @@ jobs:
             - TajaMedia - media conversion, OCR, QR, benchmarks
             - TajaBuild - ISO build and release pipeline
           files: |
-            nexus.iso
+            tajaos.iso
             SHA256SUMS
           make_latest: true
           token: ${{ secrets.GITHUB_TOKEN }}
