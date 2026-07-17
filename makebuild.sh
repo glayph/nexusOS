@@ -337,6 +337,7 @@ chroot "$ROOTFS" /bin/bash -c "
   fi
 
   # Enable bash completion for os command
+  mkdir -p /etc/bash_completion.d
   cat > /etc/bash_completion.d/os << 'COMP'
 _os_completion() {
   local cur=\${COMP_WORDS[COMP_CWORD]}
