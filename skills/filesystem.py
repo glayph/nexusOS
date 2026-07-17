@@ -31,10 +31,15 @@ def _trash(f):
 
 def _restore(name):
     trash = os.path.expanduser("~/.tajados-trash")
-    files = [x for x in os.listdir(trash) if x.startswith(name)]
-    if not files:
-        return f"Not found in trash: {name}"
-    src = os.path.join(trash, sorted(files)[-1])
-    dest = os.path.join(os.getcwd(), name)
-    shutil.move(src, dest)
-    return f"Restored: {dest}"
+    try:
+        if not os.path.isdir(trash):
+            return f"Not found in trash: {name}"
+        files = [x for x in os.listdir(trash) if x.startswith(name)]
+        if not files:
+            return f"Not found in trash: {name}"
+        src = os.path.join(trash, sorted(files)[-1])
+        dest = os.path.join(os.getcwd(), name)
+        shutil.move(src, dest)
+        return f"Restored: {dest}"
+    except Exception as e:
+        return f"Error restoring from trash: {e}"

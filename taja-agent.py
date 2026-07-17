@@ -63,16 +63,19 @@ def load_skills(skills_dir="/opt/tajados/skills"):
     skills = {}
     if not os.path.isdir(skills_dir):
         return skills
-    for f in os.listdir(skills_dir):
-        if not f.endswith(".py") or f.startswith("_"):
-            continue
-        try:
-            spec = importlib.util.spec_from_file_location(f[:-3], f"{skills_dir}/{f}")
-            mod  = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
-            skills.update(getattr(mod, "SKILLS", {}))
-        except Exception as e:
-            print(f"{Y}[skill] Failed to load {f}: {e}{N}")
+    try:
+        for f in os.listdir(skills_dir):
+            if not f.endswith(".py") or f.startswith("_"):
+                continue
+            try:
+                spec = importlib.util.spec_from_file_location(f[:-3], f"{skills_dir}/{f}")
+                mod  = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                skills.update(getattr(mod, "SKILLS", {}))
+            except Exception as e:
+                print(f"{Y}[skill] Failed to load {f}: {e}{N}")
+    except Exception as e:
+        print(f"{Y}[skill] Failed to list skills directory: {e}{N}")
     return skills
 
 # ── Audit log ──────────────────────────────────────────────────────────────────
@@ -216,10 +219,16 @@ def sysinfo():
     def q(cmd):
         try: return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=3).stdout.strip()
         except: return "?"
+    def read_proc(path):
+        try: return open(path).read().strip()
+        except: return "0"
     print(f"\n{D}╭────────────────────────────────────────────────────────────╮{N}")
     print(f"{D}│{N}  {B}Host   :{N} {q('hostname'):<40} {D}|{N} {q('hostname -I').split()[0] if q('hostname -I') else 'no IP'}")
     print(f"{D}│{N}  {B}Kernel :{N} {q('uname -r'):<46}")
-    print(f"{D}│{N}  {B}Uptime :{N} {int(float(open('/proc/uptime').read().split()[0])//3600)}h {int((float(open('/proc/uptime').read().split()[0])%3600)//60)}m  {D}|{N}  Load: {q('cut -d\" \" -f1-3 /proc/loadavg')}")
+    uptime_str = read_proc('/proc/uptime').split()[0]
+    try: uptime_val = float(uptime_str)
+    except: uptime_val = 0
+    print(f"{D}│{N}  {B}Uptime :{N} {int(uptime_val//3600)}h {int((uptime_val%3600)//60)}m  {D}|{N}  Load: {q('cut -d\" \" -f1-3 /proc/loadavg')}")
     print(f"{D}│{N}  {B}Memory :{N} {q('free -h | grep Mem | awk \"{print $3\\\"/\\\"$2}\"'):<42}")
     print(f"{D}│{N}  {B}Disk   :{N} {q('df -h / | tail -1 | awk \"{print $3\\\"/\\\"$2}\"'):<42}")
     print(f"{D}╰────────────────────────────────────────────────────────────╯{N}\n")

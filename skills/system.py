@@ -69,7 +69,12 @@ def snapshot():
     return f"Snapshot created: {dest}"
 
 def list_snapshots():
-    snaps = [d for d in os.listdir("/var/backups") if d.startswith("tajados-snapshot-")]
-    if not snaps:
-        return "No snapshots found."
-    return "\n".join(sorted(snaps, reverse=True))
+    try:
+        if not os.path.isdir("/var/backups"):
+            return "No snapshots found."
+        snaps = [d for d in os.listdir("/var/backups") if d.startswith("tajados-snapshot-")]
+        if not snaps:
+            return "No snapshots found."
+        return "\n".join(sorted(snaps, reverse=True))
+    except Exception as e:
+        return f"Error listing snapshots: {e}"
