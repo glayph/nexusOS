@@ -12,9 +12,9 @@ SKILLS = {
     "find file":        ("Search for a file",          lambda q: run(f"find / -name '*{q}*' 2>/dev/null | head -20")),
     "file info":        ("File details",               lambda f: run(f"ls -lah {f} && file {f} && stat {f}")),
     "trash file":       ("Move file to trash",         lambda f: _trash(f)),
-    "trash list":       ("List trash",                 lambda: run("ls -lh ~/.nexus-trash/ 2>/dev/null || echo 'Trash empty'")),
+    "trash list":       ("List trash",                 lambda: run("ls -lh ~/.tajados-trash/ 2>/dev/null || echo 'Trash empty'")),
     "trash restore":    ("Restore from trash",         lambda f: _restore(f)),
-    "trash empty":      ("Empty trash",                lambda: run("rm -rf ~/.nexus-trash/* && echo 'Trash emptied'")),
+    "trash empty":      ("Empty trash",                lambda: run("rm -rf ~/.tajados-trash/* && echo 'Trash emptied'")),
     "backup create":    ("Create a backup",            lambda s,d: run(f"rsync -av --progress {s} {d}")),
     "disk check":       ("Check filesystem integrity", lambda d: run(f"fsck -n {d} 2>/dev/null || echo 'Use: umount first, then fsck {d}'")),
     "large files":      ("Find largest files",         lambda p: run(f"find {p} -type f -exec du -sh {{}} + 2>/dev/null | sort -hr | head -20")),
@@ -23,14 +23,14 @@ SKILLS = {
 }
 
 def _trash(f):
-    trash = os.path.expanduser("~/.nexus-trash")
+    trash = os.path.expanduser("~/.tajados-trash")
     os.makedirs(trash, exist_ok=True)
     dest = os.path.join(trash, f"{os.path.basename(f)}.{int(time.time())}")
     shutil.move(f, dest)
     return f"Moved to trash: {dest}"
 
 def _restore(name):
-    trash = os.path.expanduser("~/.nexus-trash")
+    trash = os.path.expanduser("~/.tajados-trash")
     files = [x for x in os.listdir(trash) if x.startswith(name)]
     if not files:
         return f"Not found in trash: {name}"

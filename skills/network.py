@@ -12,7 +12,7 @@ SKILLS = {
     "dns lookup":       ("DNS lookup",                 lambda h: run(f"nslookup {h} 2>/dev/null || dig {h} +short 2>/dev/null || host {h}")),
     "dns troubleshoot": ("DNS diagnostics",            lambda: _dns_check()),
     "traceroute":       ("Trace route to host",        lambda h: run(f"traceroute -m 15 {h} 2>/dev/null || tracepath {h}")),
-    "speed test":       ("Internet speed test",        lambda: run("speedtest-cli --simple 2>/dev/null || curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3")),
+    "speed test":       ("Internet speed test",        lambda: run("speedtest-cli --simple 2>/dev/null || echo 'Install speedtest-cli: apt-get install speedtest-cli'")),
     "open ports":       ("Show open ports",            lambda: run("ss -tuln")),
     "connections":      ("Active connections",         lambda: run("ss -tp")),
     "firewall status":  ("Firewall status",            lambda: run("ufw status verbose 2>/dev/null || iptables -L -n --line-numbers 2>/dev/null | head -40")),

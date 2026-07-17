@@ -67,7 +67,12 @@ dns_set() {
   [[ -z "$dns" ]] && { read -rp "DNS servers (space-separated): " dns; }
   nmcli conn mod "$(nmcli -t -f NAME,DEVICE conn show --active | head -1 | cut -d: -f1)" ipv4.dns "$dns"
   nmcli conn up "$(nmcli -t -f NAME,DEVICE conn show --active | head -1 | cut -d: -f1)"
-  > /etc/resolv.conf; for ns in $dns; do echo "nameserver $ns" >> /etc/resolv.conf; done
+  if [[ -L /etc/resolv.conf ]]; then
+    nmcli conn mod "$(nmcli -t -f NAME,DEVICE conn show --active | head -1 | cut -d: -f1)" ipv4.ignore-auto-dns yes
+    resolvectl dns "$(nmcli -t -f DEVICE,STATE dev | grep connected | cut -d: -f1 | head -1)" $dns 2>/dev/null || true
+  else
+    > /etc/resolv.conf; for ns in $dns; do echo "nameserver $ns" >> /etc/resolv.conf; done
+  fi
   ok "DNS set to: $dns"
 }
 
@@ -126,7 +131,7 @@ proxy_clear() {
 # ========== Diagnostics ==========
 net_speed() {
   log "Testing network speed..."
-  curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -
+  apt-get install -y speedtest-cli 2>/dev/null && speedtest-cli --simple || echo "Install speedtest-cli manually: apt-get install speedtest-cli"
 }
 
 net_ping() {

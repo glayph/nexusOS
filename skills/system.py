@@ -46,7 +46,7 @@ def doctor():
         ("Processes",    "ps aux | wc -l | awk '{print $1-1\" running\"}'"),
         ("Network",      "ip route | grep default | awk '{print $3}' | head -1 || echo 'No default route'"),
         ("Systemd",      "systemctl is-system-running 2>/dev/null || echo 'unknown'"),
-        ("Agent",        "cat /etc/nexus/agent.conf | grep AGENT_PROVIDER | cut -d= -f2"),
+        ("Agent",        "cat /etc/tajados/agent.conf | grep AGENT_PROVIDER | cut -d= -f2"),
     ]
     for label, cmd in checks:
         val = subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout.strip()
@@ -54,7 +54,7 @@ def doctor():
         out.append(f"  {status} {label:<14} {val or 'N/A'}")
 
     # Check critical dirs
-    for d in ["/opt/nexus/skills", "/etc/nexus", "/var/log/nexus"]:
+    for d in ["/opt/tajados/skills", "/etc/tajados", "/var/log/tajados"]:
         out.append(f"  {'✅' if os.path.isdir(d) else '❌'} Dir: {d}")
 
     out.append("╚════════════════════════════════════════════╝")
@@ -62,14 +62,14 @@ def doctor():
 
 def snapshot():
     ts = time.strftime("%Y%m%d-%H%M%S")
-    dest = f"/var/backups/nexus-snapshot-{ts}"
+    dest = f"/var/backups/tajados-snapshot-{ts}"
     os.makedirs(dest, exist_ok=True)
     run(f"rsync -a --exclude=/proc --exclude=/sys --exclude=/dev "
         f"--exclude=/run --exclude=/tmp --exclude=/var/backups / {dest}/")
     return f"Snapshot created: {dest}"
 
 def list_snapshots():
-    snaps = [d for d in os.listdir("/var/backups") if d.startswith("nexus-snapshot-")]
+    snaps = [d for d in os.listdir("/var/backups") if d.startswith("tajados-snapshot-")]
     if not snaps:
         return "No snapshots found."
     return "\n".join(sorted(snaps, reverse=True))

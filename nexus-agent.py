@@ -28,7 +28,7 @@ When executing shell commands, wrap them: <exec>COMMAND</exec>
 Keep responses concise and actionable. Support English and Bengali input."""
 
 # ── Config loader ──────────────────────────────────────────────────────────────
-def load_config(path="/etc/nexus/agent.conf"):
+def load_config(path="/etc/tajados/agent.conf"):
     cfg = {}
     if not os.path.exists(path):
         return cfg
@@ -40,14 +40,14 @@ def load_config(path="/etc/nexus/agent.conf"):
     return cfg
 
 def load_system_prompt():
-    for p in ["/etc/nexus/agent-prompt.txt", Path.home()/".nexus/agent-prompt.txt"]:
+    for p in ["/etc/tajados/agent-prompt.txt", Path.home()/".tajados/agent-prompt.txt"]:
         if os.path.exists(p):
             return open(p).read().strip()
     return DEFAULT_PROMPT
 
 # ── API key ────────────────────────────────────────────────────────────────────
 def get_api_key(cfg):
-    key_file = cfg.get("AGENT_API_KEY_FILE", "/etc/nexus/api.key")
+    key_file = cfg.get("AGENT_API_KEY_FILE", "/etc/tajados/api.key")
     for src in [os.environ.get("ANTHROPIC_API_KEY"),
                 os.environ.get("OPENAI_API_KEY"),
                 os.environ.get("NEXUS_API_KEY"),
@@ -57,7 +57,7 @@ def get_api_key(cfg):
     return None
 
 # ── Skill loader ───────────────────────────────────────────────────────────────
-def load_skills(skills_dir="/opt/nexus/skills"):
+def load_skills(skills_dir="/opt/tajados/skills"):
     skills = {}
     if not os.path.isdir(skills_dir):
         return skills
@@ -75,7 +75,7 @@ def load_skills(skills_dir="/opt/nexus/skills"):
 
 # ── Audit log ──────────────────────────────────────────────────────────────────
 def audit(msg, cfg):
-    log_path = cfg.get("AUDIT_LOG", "/var/log/nexus/audit.log")
+    log_path = cfg.get("AUDIT_LOG", "/var/log/tajados/audit.log")
     try:
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
         with open(log_path, "a") as f:
@@ -110,7 +110,7 @@ def run_cmd(cmd, cfg):
         return f"[NEXUS] Error: {e}"
 
 # ── Memory store ───────────────────────────────────────────────────────────────
-MEMORY_FILE = Path("/etc/nexus/memory.json")
+MEMORY_FILE = Path("/etc/tajados/memory.json")
 
 def load_memory():
     try:
@@ -243,11 +243,11 @@ OFFLINE = {
 # ── Main REPL ───────────────────────────────────────────────────────────────────
 def main():
     # Run startup script
-    for s in ["/etc/nexus/startup.sh", "/etc/nexus/startup.py"]:
+    for s in ["/etc/tajados/startup.sh", "/etc/tajados/startup.py"]:
         if os.path.exists(s): subprocess.run(["bash" if s.endswith(".sh") else "python3", s])
 
     # First boot wizard
-    if not os.path.exists("/etc/nexus/.setup-done"):
+    if not os.path.exists("/etc/tajados/.setup-done"):
         run_cmd("nexus-setup", {})
 
     print(BANNER)
@@ -256,7 +256,7 @@ def main():
     cfg         = load_config()
     api_key     = get_api_key(cfg)
     system_p    = load_system_prompt()
-    skills      = load_skills(cfg.get("SKILLS_DIR", "/opt/nexus/skills"))
+    skills      = load_skills(cfg.get("SKILLS_DIR", "/opt/tajados/skills"))
     memory      = load_memory()
     provider    = cfg.get("AGENT_PROVIDER","anthropic").lower()
     online      = api_key is not None or provider in ("local","external")
@@ -264,7 +264,7 @@ def main():
     if online:
         print(f"{G}[NEXUS] AI active — provider: {provider}{N}")
     else:
-        print(f"{Y}[NEXUS] Offline mode{N} {D}(set API key in /etc/nexus/api.key){N}")
+        print(f"{Y}[NEXUS] Offline mode{N} {D}(set API key in /etc/tajados/api.key){N}")
 
     if skills:
         print(f"{D}[NEXUS] {len(skills)} skills loaded{N}")

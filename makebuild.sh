@@ -347,6 +347,36 @@ _os_completion() {
 complete -F _os_completion os
 COMP
 " 2>&1
+# ── Install Agent Config ─────────────────────────────
+log "Installing agent configuration..."
+mkdir -p "$ROOTFS/etc/tajados"
+if [[ -f "$SCRIPT_DIR/config/agent.conf" ]]; then
+  cp "$SCRIPT_DIR/config/agent.conf" "$ROOTFS/etc/tajados/agent.conf"
+  ok "Agent config installed"
+fi
+if [[ -f "$SCRIPT_DIR/config/config.conf" ]]; then
+  cp "$SCRIPT_DIR/config/config.conf" "$ROOTFS/etc/tajados/config.conf"
+  ok "System config installed"
+fi
+
+# ── Install Skills ───────────────────────────────────
+log "Installing AI skills..."
+mkdir -p "$ROOTFS/opt/tajados/skills"
+if ls "$SCRIPT_DIR/skills/"*.py &>/dev/null; then
+  cp "$SCRIPT_DIR/skills/"*.py "$ROOTFS/opt/tajados/skills/"
+  ok "Skills installed ($(ls -1 "$SCRIPT_DIR/skills/"*.py 2>/dev/null | wc -l) plugins)"
+fi
+
+# ── Install Python CLI Tools ─────────────────────────
+log "Installing Python CLI tools..."
+for tool in nexus-doctor nexus-monitor nexus-pkg nexus-setup nexus-skill; do
+  if [[ -f "$SCRIPT_DIR/bin/$tool" ]]; then
+    cp "$SCRIPT_DIR/bin/$tool" "$ROOTFS/usr/local/bin/$tool"
+    chmod +x "$ROOTFS/usr/local/bin/$tool"
+    ok "Installed: $tool"
+  fi
+done
+
 ok "TajaOS modules installed"
 
 # ── Step 11: Rebuild initramfs with live-boot ──────────────

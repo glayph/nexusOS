@@ -4,7 +4,7 @@ import subprocess, os, time
 def run(cmd,t=20): return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=t).stdout.strip()
 
 SKILLS = {
-    "audit log":        ("Show audit log",              lambda: run("tail -50 /var/log/nexus/audit.log 2>/dev/null || echo 'No audit log'")),
+    "audit log":        ("Show audit log",              lambda: run("tail -50 /var/log/tajados/audit.log 2>/dev/null || echo 'No audit log'")),
     "failed logins":    ("Show failed logins",          lambda: run("journalctl _SYSTEMD_UNIT=ssh.service | grep Failed | tail -20")),
     "open ports scan":  ("Scan open ports",             lambda: run("ss -tuln")),
     "running services": ("List all services",           lambda: run("systemctl list-units --type=service --state=running")),

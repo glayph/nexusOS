@@ -35,7 +35,7 @@ print(f"\n{C}── Step 2: AI Agent Configuration ─────────�
 print(f"  Providers: {B}1{N}) Anthropic (default)  {B}2{N}) OpenAI  {B}3{N}) Local (Ollama)  {B}4{N}) External  {B}5{N}) Skip")
 choice = ask("Select provider", "1")
 
-conf_path = "/etc/nexus/agent.conf"
+conf_path = "/etc/tajados/agent.conf"
 providers = {"1":"anthropic","2":"openai","3":"local","4":"external","5":None}
 provider = providers.get(choice, "anthropic")
 
@@ -47,12 +47,12 @@ if provider:
     if provider in ("anthropic","openai"):
         api_key = ask(f"{'Anthropic' if provider=='anthropic' else 'OpenAI'} API key (sk-...)")
         if api_key.startswith("sk-"):
-            os.makedirs("/etc/nexus", exist_ok=True)
-            open("/etc/nexus/api.key","w").write(api_key)
-            os.chmod("/etc/nexus/api.key", 0o600)
-            print(f"  {G}✅ API key saved to /etc/nexus/api.key{N}")
+            os.makedirs("/etc/tajados", exist_ok=True)
+            open("/etc/tajados/api.key","w").write(api_key)
+            os.chmod("/etc/tajados/api.key", 0o600)
+            print(f"  {G}✅ API key saved to /etc/tajados/api.key{N}")
         else:
-            print(f"  {Y}⚠  No key saved. Add later: echo 'sk-...' > /etc/nexus/api.key{N}")
+            print(f"  {Y}⚠  No key saved. Add later: echo 'sk-...' > /etc/tajados/api.key{N}")
 
     elif provider == "local":
         model = ask("Ollama model", "llama3")
@@ -64,7 +64,7 @@ if provider:
         conf += f"EXTERNAL_AGENT_CMD={cmd}\n"
         print(f"  {G}✅ External agent: {cmd}{N}")
 
-    os.makedirs("/etc/nexus", exist_ok=True)
+    os.makedirs("/etc/tajados", exist_ok=True)
     open(conf_path,"w").write(conf)
 
 print(f"\n{C}── Step 3: Timezone ─────────────────────────────{N}")
@@ -81,8 +81,8 @@ if pkgs.strip():
     print(f"  {G}✅ Packages installed{N}")
 
 # Mark first boot done
-os.makedirs("/etc/nexus", exist_ok=True)
-open("/etc/nexus/.setup-done","w").write(time.strftime("%Y-%m-%d %H:%M:%S"))
+os.makedirs("/etc/tajados", exist_ok=True)
+open("/etc/tajados/.setup-done","w").write(time.strftime("%Y-%m-%d %H:%M:%S"))
 
 print(f"""
 {G}{B}✅ Setup complete!{N}

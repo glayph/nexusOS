@@ -41,10 +41,10 @@ check("Internet",      "curl -s --max-time 4 https://1.1.1.1 > /dev/null && echo
       lambda v: v == "reachable")
 
 print(f"\n{C}── Nexus Services ──────────────────────────────{N}")
-check("Agent config",  "test -f /etc/nexus/agent.conf && echo 'present' || echo 'missing'", lambda v: v=="present")
-check("Skills dir",    "test -d /opt/nexus/skills && ls /opt/nexus/skills/*.py 2>/dev/null | wc -l | awk '{print $1\" skills\"}'")
-check("API key",       "test -f /etc/nexus/api.key && echo 'configured' || echo 'not set'", lambda v: v=="configured")
-check("Audit log",     "test -f /var/log/nexus/audit.log && echo 'active' || echo 'not found'")
+check("Agent config",  "test -f /etc/tajados/agent.conf && echo 'present' || echo 'missing'", lambda v: v=="present")
+check("Skills dir",    "test -d /opt/tajados/skills && ls /opt/tajados/skills/*.py 2>/dev/null | wc -l | awk '{print $1\" skills\"}'")
+check("API key",       "test -f /etc/tajados/api.key && echo 'configured' || echo 'not set'", lambda v: v=="configured")
+check("Audit log",     "test -f /var/log/tajados/audit.log && echo 'active' || echo 'not found'")
 check("Python3",       "python3 --version")
 check("Tmux",          "tmux -V 2>/dev/null || echo 'not installed'")
 

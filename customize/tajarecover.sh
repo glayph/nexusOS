@@ -18,7 +18,7 @@ recover_boot_repair() {
     update-grub && ok "GRUB updated"
   fi
   if command -v grub-install &>/dev/null; then
-    for disk in /dev/sd[a-z]; do
+    for disk in $(lsblk -ndo NAME,TYPE | awk '$2=="disk"{print "/dev/"$1}'); do
       [[ -b "$disk" ]] && grub-install "$disk" 2>/dev/null && ok "GRUB installed to $disk"
     done
   fi

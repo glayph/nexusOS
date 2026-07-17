@@ -1,2 +1,5 @@
 # TajaOS v2.0 Checksums
-# Run: sha256sum tajaos.iso > SHA256SUMS
+# Generate with: sha256sum tajaos.iso > SHA256SUMS
+# (Replace with actual checksum after building)
+# Example:
+# abc123def456...  tajaos.iso

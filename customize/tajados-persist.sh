@@ -32,11 +32,13 @@ persist_create() {
 }
 
 persist_resize() {
-  local new_size="${1:-4096}"
+  local new_size="${1:-4096}" current_size
   [[ -f "$PERSIST_IMG" ]] || die "No persistence image found"
-  log "Resizing to ${new_size}MB..."
+  current_size=$(du -m "$PERSIST_IMG" | cut -f1)
+  [[ "$new_size" -le "$current_size" ]] && die "New size ($new_size MB) must be larger than current size ($current_size MB)"
+  log "Resizing from ${current_size}MB to ${new_size}MB..."
   umount "$PERSIST_DIR" 2>/dev/null || true
-  dd if=/dev/zero bs=1M count=$((new_size - $(du -m "$PERSIST_IMG" | cut -f1))) >> "$PERSIST_IMG"
+  dd if=/dev/zero bs=1M count=$((new_size - current_size)) >> "$PERSIST_IMG"
   e2fsck -f "$PERSIST_IMG"
   resize2fs "$PERSIST_IMG"
   mount "$PERSIST_IMG" "$PERSIST_DIR"
