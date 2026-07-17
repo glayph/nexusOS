@@ -23,7 +23,7 @@ startx
 
 This reads `~/.xinitrc` and starts Openbox with xterm.
 
-If you install a desktop via `nexus-setup`, `.xinitrc` is automatically updated:
+If you install a desktop via `taja-setup`, `.xinitrc` is automatically updated:
 
 ```bash
 # After installing XFCE:
@@ -32,7 +32,7 @@ startx            # launches XFCE
 
 ## Display Manager
 
-A display manager (LightDM, GDM, SDDM) is **not** pre-installed. Install it via `nexus-setup` if you want the GUI to start automatically on boot.
+A display manager (LightDM, GDM, SDDM) is **not** pre-installed. Install it via `taja-setup` if you want the GUI to start automatically on boot.
 
 Without a display manager, the system boots to a root shell — exactly like a server. Run `startx` to start the GUI manually.
 
@@ -44,4 +44,4 @@ The modesetting driver is tried first. If it fails, X falls back to fbdev, then 
 - VMware (vmwgfx)
 - Physical hardware with basic UEFI framebuffer
 
-For proprietary NVIDIA/AMD drivers, install via `nexus-setup → Drivers → GPU`.
+For proprietary NVIDIA/AMD drivers, install via `taja-setup → Drivers → GPU`.

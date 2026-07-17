@@ -6,7 +6,7 @@ A live ISO boots from a read-only squashfs filesystem. Any changes made during a
 
 ## Solution: Overlay Persistence
 
-`nexus-setup` offers option 5 to create a persistent overlay. It works by:
+`taja-setup` offers option 5 to create a persistent overlay. It works by:
 
 1. Creating a **512 MB ext4 loopback file** (`/persist.img`) on the boot drive
 2. Mounting it at `/mnt/persist`
@@ -51,4 +51,4 @@ For full control, create a persistent partition manually:
 # Add to casper boot: persistence persistence-label=persistence
 ```
 
-This requires rebuilding the ISO with the `persistence` kernel parameter and is not currently supported in `nexus-setup`.
+This requires rebuilding the ISO with the `persistence` kernel parameter and is not currently supported in `taja-setup`.

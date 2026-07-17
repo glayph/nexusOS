@@ -1,6 +1,6 @@
-# Nexus OS Customization Guide
+# TajaOS Customization Guide
 
-এই ফোল্ডারের ফাইলগুলো পরিবর্তন করে তুমি Nexus OS কে নিজের মতো বানাতে পারবে।
+এই ফোল্ডারের ফাইলগুলো পরিবর্তন করে তুমি TajaOS কে নিজের মতো বানাতে পারবে।
 ISO build করার আগে এখানে তোমার পরিবর্তন করো।
 
 ---

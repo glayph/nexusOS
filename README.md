@@ -67,7 +67,7 @@ os                            # Unified command interface
 ├── tajarecover               # Recovery tools & boot repair
 ├── tajamedia                 # Media tools (OCR, QR, screen record, benchmarks)
 ├── tajabuild                 # ISO build & release pipeline
-└── nexus-setup               # Interactive setup TUI
+└── taja-setup                # Interactive setup TUI
 ```
 
 ---
@@ -164,8 +164,8 @@ make build FAST=1
 ## 📁 Project Structure
 
 ```
-nexusOS/
-├── nexus-setup.sh              ← Interactive setup TUI
+tajaOS/
+├── taja-setup.sh               ← Interactive setup TUI
 ├── makebuild.sh                ← Master build script
 ├── install-deps.sh             ← Linux dependency installer
 ├── install-deps.bat            ← Windows WSL installer

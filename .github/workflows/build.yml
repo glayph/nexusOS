@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'nexus-agent.py'
+      - 'taja-agent.py'
       - 'boot/**'
       - 'skills/**'
       - 'bin/**'
@@ -30,7 +30,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: rootfs
-          key: tajaos-rootfs-${{ hashFiles('boot/**', 'customize/**', 'install-deps.sh', 'nexus-setup.sh', 'makebuild.sh') }}
+          key: tajaos-rootfs-${{ hashFiles('boot/**', 'customize/**', 'install-deps.sh', 'taja-setup.sh', 'makebuild.sh') }}
           restore-keys: |
             tajaos-rootfs-
 

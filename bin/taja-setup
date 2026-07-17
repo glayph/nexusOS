@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Nexus OS — First Boot Welcome Wizard"""
+"""TajaOS — First Boot Welcome Wizard"""
 import os, sys, subprocess, time
 
 C="\033[96m"; G="\033[92m"; Y="\033[93m"; N="\033[0m"; B="\033[1m"
@@ -22,11 +22,11 @@ print(f"""
   ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║
   ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║
 {N}
-  {B}Welcome to Nexus OS 1.1 — First Boot Setup{N}
+  {B}Welcome to TajaOS 2.0 — First Boot Setup{N}
 """)
 
 print(f"{C}── Step 1: System Identity ─────────────────────{N}")
-hostname = ask("Hostname", "nexus")
+hostname = ask("Hostname", "tajaos")
 if hostname and hostname != run("hostname"):
     subprocess.run(f"hostnamectl set-hostname {hostname}", shell=True)
     print(f"  {G}✅ Hostname set to: {hostname}{N}")
@@ -88,11 +88,11 @@ print(f"""
 {G}{B}✅ Setup complete!{N}
 
   {C}Commands to know:{N}
-    nexus           → Launch AI agent
-    nexus-doctor    → System health check
-    nexus-monitor   → Live dashboard
-    nexus-pkg       → Package manager
-    nexus-skill     → Plugin manager
+    taja-agent      → Launch AI agent
+    taja-doctor     → System health check
+    taja-monitor    → Live dashboard
+    taja-pkg        → Package manager
+    taja-skill      → Plugin manager
 
-  {Y}Type 'nexus' to start the AI agent.{N}
+  {Y}Type 'taja-agent' to start the AI assistant.{N}
 """)

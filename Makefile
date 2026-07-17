@@ -65,6 +65,6 @@ qemu:
 lint:
 	@command -v shellcheck >/dev/null || (echo "Install: apt install shellcheck"; exit 1)
 	@echo "[TAJAOS] Running shellcheck on all scripts..."
-	@shellcheck makebuild.sh install-deps.sh nexus-setup.sh
+	@shellcheck makebuild.sh install-deps.sh taja-setup.sh
 
 shellcheck: lint

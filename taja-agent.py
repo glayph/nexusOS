@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NEXUS OS v1.1 — Agentic AI Brain
+TajaOS Agent v2.0 — AI Assistant
 Pluggable AI provider: Anthropic | OpenAI | Local | External
 """
 import os, sys, re, json, time, subprocess, socket, importlib.util
@@ -16,10 +16,10 @@ BANNER = f"""{B}{C}
   ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗ ██║   ██║███████╗
   ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║ ██║   ██║╚════██║
   ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║ ╚██████╔╝███████║
-{N}  {D}Nexus OS v1.1 — Agentic AI Linux  |  Modular Agent Core{N}
+{N}  {D}TajaOS 2.0 — AI Linux Assistant  |  Modular Agent Core{N}
 """
 
-DEFAULT_PROMPT = """You are NEXUS — the AI brain of a custom Linux distribution (Nexus OS v1.1).
+DEFAULT_PROMPT = """You are TAJA — the AI assistant of TajaOS 2.0.
 
 System access: full root control, Ubuntu 24.04 Noble base.
 Capabilities: system management, networking, security, developer tools, file management.
@@ -50,6 +50,7 @@ def get_api_key(cfg):
     key_file = cfg.get("AGENT_API_KEY_FILE", "/etc/tajados/api.key")
     for src in [os.environ.get("ANTHROPIC_API_KEY"),
                 os.environ.get("OPENAI_API_KEY"),
+                os.environ.get("TAJA_API_KEY"),
                 os.environ.get("NEXUS_API_KEY"),
                 open(key_file).read().strip() if os.path.exists(key_file) else None]:
         if src and src.startswith("sk-"):
@@ -100,14 +101,14 @@ def run_cmd(cmd, cfg):
     audit(f"EXEC: {cmd}", cfg)
     if cfg.get("CONFIRM_DESTRUCTIVE","true") == "true" and is_destructive(cmd):
         if not confirm(f"Destructive command: {cmd}"):
-            return "[NEXUS] Command cancelled."
+            return "[TAJA] Command cancelled."
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
         return ((r.stdout or "") + (r.stderr or "")).strip()[:3000] or "(no output)"
     except subprocess.TimeoutExpired:
-        return "[NEXUS] Timed out (30s)"
+        return "[TAJA] Timed out (30s)"
     except Exception as e:
-        return f"[NEXUS] Error: {e}"
+        return f"[TAJA] Error: {e}"
 
 # ── Memory store ───────────────────────────────────────────────────────────────
 MEMORY_FILE = Path("/etc/tajados/memory.json")
@@ -195,11 +196,11 @@ def call_ai(messages, cfg, api_key, system):
                                  cfg.get("EXTERNAL_AGENT_CMD",""),
                                  cfg.get("EXTERNAL_AGENT_ARGS",""))
         else:
-            return "[NEXUS] AI provider disabled."
+            return "[TAJA] AI provider disabled."
     except ConnectionRefusedError:
-        return "[NEXUS] Cannot connect to AI provider. Check connection."
+        return "[TAJA] Cannot connect to AI provider. Check connection."
     except Exception as e:
-        return f"[NEXUS] AI error: {e}"
+        return f"[TAJA] AI error: {e}"
 
 # ── System info ────────────────────────────────────────────────────────────────
 def sysinfo():
@@ -248,7 +249,7 @@ def main():
 
     # First boot wizard
     if not os.path.exists("/etc/tajados/.setup-done"):
-        run_cmd("nexus-setup", {})
+        run_cmd("taja-setup", {})
 
     print(BANNER)
     sysinfo()
@@ -262,12 +263,12 @@ def main():
     online      = api_key is not None or provider in ("local","external")
 
     if online:
-        print(f"{G}[NEXUS] AI active — provider: {provider}{N}")
+        print(f"{G}[TAJA] AI active — provider: {provider}{N}")
     else:
-        print(f"{Y}[NEXUS] Offline mode{N} {D}(set API key in /etc/tajados/api.key){N}")
+        print(f"{Y}[TAJA] Offline mode{N} {D}(set API key in /etc/tajados/api.key){N}")
 
     if skills:
-        print(f"{D}[NEXUS] {len(skills)} skills loaded{N}")
+        print(f"{D}[TAJA] {len(skills)} skills loaded{N}")
     print(f"\n{C}Commands: 'help' 'sysinfo' 'clear' 'memory' 'exit'{N}\n")
 
     conversation = []
@@ -275,9 +276,9 @@ def main():
     while True:
         try:
             status_bar(cfg)
-            user_input = input(f"{B}{C}nexus ❯{N} ").strip()
+            user_input = input(f"{B}{C}taja ❯{N} ").strip()
         except (EOFError, KeyboardInterrupt):
-            print(f"\n{Y}[NEXUS] Goodbye.{N}"); break
+            print(f"\n{Y}[TAJA] Goodbye.{N}"); break
 
         if not user_input: continue
 
@@ -285,7 +286,7 @@ def main():
 
         # ── Built-ins ──────────────────────────────────────────────────────
         if user_input.lower() in ("exit","quit","shutdown"):
-            print(f"{Y}[NEXUS] Powering down.{N}"); break
+            print(f"{Y}[TAJA] Powering down.{N}"); break
 
         if user_input.lower() == "clear":
             os.system("clear"); print(BANNER); continue
@@ -305,10 +306,10 @@ def main():
   exit              — Quit
 
 {C}Utility commands:{N}
-  nexus-doctor      — Full health check
-  nexus-monitor     — Live dashboard
-  nexus-pkg         — Package manager
-  nexus-skill       — Plugin manager
+  taja-doctor       — Full health check
+  taja-monitor      — Live dashboard
+  taja-pkg          — Package manager
+  taja-skill        — Plugin manager
 """); continue
 
         if user_input.lower() == "skills":
@@ -325,7 +326,7 @@ def main():
                 k, _, v = kv.partition("=")
                 memory[k.strip()] = v.strip()
                 save_memory(memory)
-                print(f"{G}[NEXUS] Saved: {k.strip()} = {v.strip()}{N}")
+                print(f"{G}[TAJA] Saved: {k.strip()} = {v.strip()}{N}")
             continue
 
         # ── Skill matching ─────────────────────────────────────────────────
@@ -343,24 +344,24 @@ def main():
         # ── AI or offline ──────────────────────────────────────────────────
         if online:
             conversation.append({"role": "user", "content": user_input})
-            print(f"{D}[NEXUS] Processing...{N}")
+            print(f"{D}[TAJA] Processing...{N}")
             response = call_ai(conversation, cfg, api_key, system_p)
 
             exec_blocks = re.findall(r"<exec>(.*?)</exec>", response, re.DOTALL)
             clean = re.sub(r"<exec>.*?</exec>", "", response, flags=re.DOTALL).strip()
 
-            if clean: print(f"\n{C}[NEXUS]{N} {clean}\n")
+            if clean: print(f"\n{C}[TAJA]{N} {clean}\n")
 
             for cmd in exec_blocks:
                 cmd = cmd.strip()
-                print(f"{Y}[NEXUS] Running:{N} {D}{cmd}{N}")
+                print(f"{Y}[TAJA] Running:{N} {D}{cmd}{N}")
                 out = run_cmd(cmd, cfg)
                 print(f"{D}{out}{N}\n")
                 conversation.append({"role":"assistant","content":response})
                 conversation.append({"role":"user","content":f"Command output:\n{out}"})
                 followup = call_ai(conversation, cfg, api_key, system_p)
                 fc = re.sub(r"<exec>.*?</exec>","",followup,flags=re.DOTALL).strip()
-                if fc: print(f"{C}[NEXUS]{N} {fc}\n")
+                if fc: print(f"{C}[TAJA]{N} {fc}\n")
                 conversation.append({"role":"assistant","content":followup})
                 break
             else:

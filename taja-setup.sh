@@ -350,6 +350,6 @@ main_menu() {
 command -v whiptail >/dev/null || {
   echo -e "${R}whiptail not found. Run: apt install whiptail${N}"; exit 1
 }
-[[ $EUID -ne 0 ]] && echo -e "${R}Run as root: nexus-setup${N}" && exit 1
+[[ $EUID -ne 0 ]] && echo -e "${R}Run as root: taja-setup${N}" && exit 1
 
 main_menu

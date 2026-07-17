@@ -52,4 +52,4 @@ modprobe snd-hda-intel
 pulseaudio --start
 ```
 
-**Audio alsa not visible:** Run as non-root user (after creating one via `nexus-setup`). PulseAudio per-user daemon requires a user session.
+**Audio alsa not visible:** Run as non-root user (after creating one via `taja-setup`). PulseAudio per-user daemon requires a user session.

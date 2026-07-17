@@ -19,7 +19,7 @@ The network stack uses standard Ubuntu packages with no custom configuration.
 Wi-Fi firmware packages (`firmware-iwlwifi`, `firmware-realtek`, `firmware-brcm80211`) are **not** pre-installed to save space (~30 MB). Install via:
 
 ```bash
-nexus-setup → Drivers → Wi-Fi firmware
+taja-setup → Drivers → Wi-Fi firmware
 ```
 
 Or manually:

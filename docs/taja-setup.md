@@ -1,8 +1,8 @@
-# `nexus-setup` — Interactive Setup TUI
+# `taja-setup` — Interactive Setup TUI
 
 ## Overview
 
-`nexus-setup` is a terminal user interface written in Bash using `whiptail`. It runs after boot and lets users configure their system with arrow-key navigation.
+`taja-setup` is a terminal user interface written in Bash using `whiptail`. It runs after boot and lets users configure their system with arrow-key navigation.
 
 ## Main Menu
 
@@ -50,7 +50,7 @@ Prompts for username and password. Creates a sudo-capable user.
 Creates a 512 MB overlay file (`/persist.img`) on the boot drive and installs a systemd service to mount it. Changes survive reboots.
 
 ### 6. Install ALL
-One-command setup: GPU drivers + Wi-Fi firmware + XFCE + LightDM + user 'nexus' + persistence.
+One-command setup: GPU drivers + Wi-Fi firmware + XFCE + LightDM + user 'tajaos' + persistence.
 
 ### 7. Uninstall Drivers
 Checklist to remove any installed driver groups cleanly.
@@ -59,5 +59,5 @@ Checklist to remove any installed driver groups cleanly.
 
 - **Language**: Bash
 - **UI Library**: `whiptail` (from the `whiptail` package)
-- **Location**: `/usr/bin/nexus-setup`
+- **Location**: `/usr/bin/taja-setup`
 - **Config**: No config files — all state is ephemeral

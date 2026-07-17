@@ -28,7 +28,7 @@ The kernel (`linux-image-virtual`) ships with thousands of modules for every pos
 
 ## Module Reinstallation
 
-Since modules are physically deleted from the rootfs, they cannot be recovered without reinstalling the kernel package. The `nexus-setup` tool provides this option:
+Since modules are physically deleted from the rootfs, they cannot be recovered without reinstalling the kernel package. The `taja-setup` tool provides this option:
 
 ```
 Drivers → Re-install kernel (restore modules)

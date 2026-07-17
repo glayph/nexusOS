@@ -1,14 +1,14 @@
 @echo off
 :: ============================================================
-::  NEXUS OS — One-Click Dependency Installer (Windows + WSL)
+::  TajaOS — One-Click Dependency Installer (Windows + WSL)
 ::  Double-click or run in cmd
 :: ============================================================
 
-title Nexus OS — Dependency Installer
+title TajaOS — Dependency Installer
 
 echo.
-echo   NEXUS OS — Windows Setup (WSL)
-echo   ================================
+echo   TajaOS — Windows Setup (WSL)
+echo   =============================
 echo.
 
 :: Check if WSL is installed

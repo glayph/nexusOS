@@ -5,7 +5,7 @@
 The bash prompt is styled after Ubuntu/Kali with a colored format:
 
 ```
-user@nexus:/root$
+user@tajaos:/root$
 ```
 
 - Cyan `\u@\h` (user@host)

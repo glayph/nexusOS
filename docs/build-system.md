@@ -34,15 +34,15 @@ Sets hostname, hosts file, os-release, and configures `agetty` for auto-login as
 
 Writes `.bashrc`, `.bash_profile`, and `.inputrc` for a clean Ubuntu/Kali-style terminal experience with colored prompt, ls colors, tab completion, and useful aliases.
 
-### Step 9: Install `nexus-setup`
+### Step 9: Install `taja-setup`
 
-Copies `nexus-setup.sh` to `/usr/bin/nexus-setup` — an interactive TUI for installing drivers, desktops, and persistence after boot.
+Copies `taja-setup.sh` to `/usr/bin/taja-setup` — an interactive TUI for installing drivers, desktops, and persistence after boot.
 
-### Step 10: Rebuild initramfs
+### Step 10: Install AI Agent + Rebuild initramfs
 
 Runs `update-initramfs -u -k all` to generate the initrd with live-boot support.
 
-### Step 11: ISO structure + squashfs + grub-mkrescue
+### Step 12: ISO structure + squashfs + grub-mkrescue
 
 Creates the ISO directory layout, compresses the rootfs into `filesystem.squashfs` (XZ compression), and runs `grub-mkrescue` to produce a dual BIOS+UEFI bootable ISO.
 
@@ -52,7 +52,7 @@ Creates the ISO directory layout, compresses the rootfs into `filesystem.squashf
 |---|---|
 | `--clean` | Delete existing rootfs and rebuild from scratch |
 | `--no-squash` | Skip squashfs compression (re-packs ISO only) |
-| `--output DIR` | Write `nexus.iso` to a custom directory |
+| `--output DIR` | Write `tajaos.iso` to a custom directory |
 
 These are also exposed through the `Makefile`:
 

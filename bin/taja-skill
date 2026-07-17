@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Nexus OS — Plugin/Skill Manager"""
+"""TajaOS — Plugin/Skill Manager"""
 import os, sys, importlib.util, subprocess
 
 C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"
@@ -55,13 +55,13 @@ def remove_skill(name):
         print(f"{R}Not found: {name}{N}")
 
 HELP = f"""
-{B}{C}nexus-skill{N} — Nexus OS Plugin Manager
+{B}{C}taja-skill{N} — TajaOS Plugin Manager
 
   {B}Usage:{N}
-    nexus-skill list              List all installed skills
-    nexus-skill show  <name>      Show skill commands
-    nexus-skill install <url>     Install skill from URL
-    nexus-skill remove  <name>    Remove a skill
+    taja-skill list               List all installed skills
+    taja-skill show  <name>       Show skill commands
+    taja-skill install <url>      Install skill from URL
+    taja-skill remove  <name>     Remove a skill
 """
 
 if len(sys.argv) < 2: print(HELP); sys.exit(0)

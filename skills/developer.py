@@ -1,4 +1,4 @@
-"""Nexus OS — Developer Tools Skills"""
+"""TajaOS — Developer Tools Skills"""
 import subprocess, os
 
 def run(cmd,t=30): return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=t).stdout.strip()

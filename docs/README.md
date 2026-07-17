@@ -1,4 +1,4 @@
-# Nexus OS — Documentation
+# TajaOS — Documentation
 
 This directory contains 12 explanation files covering the project's build system, components, and configuration.
 
@@ -9,7 +9,7 @@ This directory contains 12 explanation files covering the project's build system
 | 3 | [packages.md](packages.md) | Every package installed and why |
 | 4 | [kernel-modules.md](kernel-modules.md) | Which kernel modules are stripped and why |
 | 5 | [xorg-setup.md](xorg-setup.md) | X server configuration and video drivers |
-| 6 | [nexus-setup.md](nexus-setup.md) | The interactive setup TUI (`nexus-setup`) |
+| 6 | [taja-setup.md](taja-setup.md) | The interactive setup TUI (`taja-setup`) |
 | 7 | [networking.md](networking.md) | Network stack, Wi-Fi, Bluetooth |
 | 8 | [audio.md](audio.md) | ALSA + PulseAudio setup |
 | 9 | [persistence.md](persistence.md) | Overlay-based persistence across reboots |

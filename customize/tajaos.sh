@@ -243,7 +243,7 @@ main() {
 
     # TUI
     tui) tajashell menu ;;
-    setup) nexus-setup ;;
+    setup) taja-setup ;;
     shortcuts|help-screen)
       cat << 'SHORTCUTS'
 ╭───────────────────────────────────╮

@@ -12,16 +12,16 @@ Located at `boot/grub/grub.cfg`. It's a minimal configuration with three menu en
 
 ## Menu Entries
 
-### 1. Nexus OS (default)
+### 1. TajaOS (default)
 ```bash
-linux /boot/vmlinuz boot=live components quiet hostname=nexus
+linux /boot/vmlinuz boot=live components quiet hostname=tajaos
 initrd /boot/initrd.img
 ```
 Standard boot with quiet mode. Auto-logs in to a root shell.
 
-### 2. Nexus OS (safe mode)
+### 2. TajaOS (verbose mode)
 ```bash
-linux /boot/vmlinuz boot=live components hostname=nexus
+linux /boot/vmlinuz boot=live components hostname=tajaos
 initrd /boot/initrd.img
 ```
 Boots without `quiet` — shows all kernel messages. Useful for debugging boot issues.
@@ -40,13 +40,13 @@ The ISO uses `grub-mkrescue` (not traditional `grub-install`), which:
 - Automatically embeds all GRUB modules (`echo.mod`, `chain.mod`, etc.) — solving the "module not found" errors that occur with manual `bios.img`/`efiboot.img` approaches
 - Creates a proper **El Torito** boot record for BIOS
 - Creates a **FAT partition** with EFI/grub for UEFI boot
-- Sets ISO volume label to `NEXUS_OS_1_0`
+- Sets ISO volume label to `TAJAOS_2_0`
 
 ## Volume Label
 
-GRUB searches for the ISO by label:
+GRUB searches for the ISO by label (TAJAOS_2_0):
 ```bash
-search --no-floppy --label --set=root "NEXUS_OS_1_0"
+search --no-floppy --label --set=root "TAJAOS_2_0"
 ```
 
 If the label isn't found (e.g., booting from a non-ISO source), it falls back to `(cd0)`.

@@ -1,5 +1,5 @@
 """
-Nexus OS — System Management Skills
+TajaOS — System Management Skills
 Handles: health check, process management, package management, snapshots
 """
 import subprocess, os, shutil, time
@@ -36,7 +36,7 @@ SKILLS = {
 
 def doctor():
     """Full system health check"""
-    out = ["", "╔══ NEXUS OS HEALTH CHECK ═══════════════════╗"]
+    out = ["", "╔══ TAJAOS HEALTH CHECK ════════════════════╗"]
     checks = [
         ("Kernel",       "uname -r"),
         ("Uptime",       "uptime -p"),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Nexus OS — Live Monitoring Dashboard"""
+"""TajaOS — Live Monitoring Dashboard"""
 import subprocess, os, time, sys
 
 def run(cmd):
@@ -36,7 +36,7 @@ def disk_pct(path="/"):
     used  = (s.f_blocks - s.f_bfree) * s.f_frsize
     return used/total*100 if total else 0, total//1024//1024//1024, used//1024//1024//1024
 
-print(f"{C}Starting Nexus Monitor... (Ctrl+C to exit){N}")
+print(f"{C}Starting TajaOS Monitor... (Ctrl+C to exit){N}")
 try:
     while True:
         clear()
@@ -60,7 +60,7 @@ try:
         else:
             net_str = "No network interface"
 
-        print(f"\n{B}{C}╔══════ NEXUS OS — LIVE MONITOR ═══════════════════╗{N}")
+        print(f"\n{B}{C}╔══════ TAJAOS — LIVE MONITOR ═════════════════════╗{N}")
         print(f"{B}{C}║{N}  {now}   {D}{hostname}   {ip}{N}")
         print(f"{B}{C}║{N}  Uptime: {uptime}   Load: {load}   Procs: {procs}")
         print(f"{B}{C}╠══════════════════════════════════════════════════╣{N}")
@@ -72,7 +72,7 @@ try:
         procs_out = run("ps aux --sort=-%cpu | head -8 | awk 'NR>1{printf \"  %-20s CPU:%-5s MEM:%s\\n\",$11,$3,$4}'")
         print(procs_out)
         print(f"{B}{C}╚══════════════════════════════════════════════════╝{N}")
-        print(f"\n  {D}Refresh: 2s   Ctrl+C to exit   'nexus-doctor' for full report{N}")
+        print(f"\n  {D}Refresh: 2s   Ctrl+C to exit   'taja-doctor' for full report{N}")
         time.sleep(2)
 except KeyboardInterrupt:
     print(f"\n{Y}Monitor stopped.{N}")

@@ -81,12 +81,12 @@ Replaces the full `xorg` metapackage with only what's needed:
 | `sudo` | Privilege escalation |
 | `man-db` | Man pages |
 | `tmux` | Terminal multiplexer |
-| `whiptail` | TUI menus for `nexus-setup` |
+| `whiptail` | TUI menus for `taja-setup` |
 | `bash-completion` | Tab completion |
 | `command-not-found` | Package suggestions for unknown commands |
 | `ca-certificates` | SSL/TLS certificates |
 
-## Not Included (available via `nexus-setup`)
+## Not Included (available via `taja-setup`)
 
 - **Desktop environments**: XFCE, MATE, GNOME, KDE
 - **Display managers**: LightDM, GDM, SDDM

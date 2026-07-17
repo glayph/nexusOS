@@ -1,4 +1,4 @@
-"""Nexus OS — Filesystem & Storage Skills"""
+"""TajaOS — Filesystem & Storage Skills"""
 import subprocess, os, shutil, time
 
 def run(cmd,t=30): return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=t).stdout.strip()

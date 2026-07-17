@@ -1,4 +1,4 @@
-"""Nexus OS — Network Skills"""
+"""TajaOS — Network Skills"""
 import subprocess
 
 def run(cmd, t=20): return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=t).stdout.strip()

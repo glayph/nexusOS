@@ -1,4 +1,4 @@
-"""Nexus OS — Security Skills"""
+"""TajaOS — Security Skills"""
 import subprocess, os, time
 
 def run(cmd,t=20): return subprocess.run(cmd,shell=True,capture_output=True,text=True,timeout=t).stdout.strip()

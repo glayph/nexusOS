@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
-"""Nexus OS — Package Manager Wrapper"""
+"""TajaOS — Package Manager Wrapper"""
 import subprocess, sys
 
 C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"
 def run(cmd): return subprocess.run(cmd, shell=True)
 
 HELP = f"""
-{B}{C}nexus-pkg{N} — Nexus OS Package Manager
+{B}{C}taja-pkg{N} — TajaOS Package Manager
 
   {B}Usage:{N}
-    nexus-pkg install  <pkg>   Install a package
-    nexus-pkg remove   <pkg>   Remove a package
-    nexus-pkg search   <query> Search packages
-    nexus-pkg list             List installed packages
-    nexus-pkg update           Update package lists
-    nexus-pkg upgrade          Upgrade all packages
-    nexus-pkg info     <pkg>   Show package info
-    nexus-pkg clean            Clean package cache
-    nexus-pkg autoremove       Remove unused packages
+    taja-pkg install  <pkg>   Install a package
+    taja-pkg remove   <pkg>   Remove a package
+    taja-pkg search   <query> Search packages
+    taja-pkg list             List installed packages
+    taja-pkg update           Update package lists
+    taja-pkg upgrade          Upgrade all packages
+    taja-pkg info     <pkg>   Show package info
+    taja-pkg clean            Clean package cache
+    taja-pkg autoremove       Remove unused packages
 
   {B}Examples:{N}
-    nexus-pkg install git
-    nexus-pkg search python3
-    nexus-pkg info tmux
+    taja-pkg install git
+    taja-pkg search python3
+    taja-pkg info tmux
 """
 
 if len(sys.argv) < 2:
@@ -45,7 +45,7 @@ cmds = {
 }
 
 if cmd in cmds:
-    print(f"\n{C}[nexus-pkg]{N} {cmds[cmd]}\n")
+    print(f"\n{C}[taja-pkg]{N} {cmds[cmd]}\n")
     run(cmds[cmd])
 else:
     print(f"{R}Unknown command: {cmd}{N}")

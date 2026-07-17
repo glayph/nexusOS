@@ -12,14 +12,15 @@ warn() { echo -e "${Y}[ WARN]${N} $*"; }
 die()  { echo -e "${R}[FAIL ]${N} $*"; exit 1; }
 
 CLEAN=false; NO_SQUASH=false; OUTPUT_DIR="$(pwd)"
-for arg in "$@"; do
-  case $arg in
-    --clean)     CLEAN=true ;;
-    --no-squash) NO_SQUASH=true ;;
-    --output)    OUTPUT_DIR="$2"; shift ;;
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --clean)     CLEAN=true; shift ;;
+    --no-squash) NO_SQUASH=true; shift ;;
+    --output)    OUTPUT_DIR="$2"; shift 2 ;;
     --help)
       echo "Usage: sudo ./makebuild.sh [--clean] [--no-squash] [--output DIR]"
       exit 0 ;;
+    *) shift ;;
   esac
 done
 
@@ -76,7 +77,8 @@ trap tajaos_cleanup EXIT ERR
 # ── Step 5: Install packages ───────────────────────────────
   log "Installing packages..."
   chroot "$ROOTFS" /bin/bash -c "
-    set -e
+set -e
+set -o pipefail
     apt-get update -qq
 
     # linux-image-virtual = smaller kernel, fewer unnecessary modules
@@ -124,6 +126,7 @@ trap tajaos_cleanup EXIT ERR
       network-manager \
       rsync \
       jq \
+      python3 \
       2>&1
 
   echo root:tajaos | chpasswd
@@ -301,9 +304,9 @@ cp "$ROOTFS/root/.bash_profile" "$ROOTFS/etc/skel/"
 cp "$ROOTFS/root/.inputrc" "$ROOTFS/etc/skel/"
 
 # ── Step 9: Setup script ────────────────────────────────
-log "Installing nexus-setup..."
-cp "$SCRIPT_DIR/nexus-setup.sh" "$ROOTFS/usr/bin/nexus-setup"
-chmod +x "$ROOTFS/usr/bin/nexus-setup"
+log "Installing taja-setup..."
+cp "$SCRIPT_DIR/taja-setup.sh" "$ROOTFS/usr/bin/taja-setup"
+chmod +x "$ROOTFS/usr/bin/taja-setup"
 
 # ── Step 10: Install TajaOS System Modules ───────────────
 log "Installing TajaOS system modules..."
@@ -369,7 +372,7 @@ fi
 
 # ── Install Python CLI Tools ─────────────────────────
 log "Installing Python CLI tools..."
-for tool in nexus-doctor nexus-monitor nexus-pkg nexus-setup nexus-skill; do
+for tool in taja-doctor taja-monitor taja-pkg taja-setup taja-skill; do
   if [[ -f "$SCRIPT_DIR/bin/$tool" ]]; then
     cp "$SCRIPT_DIR/bin/$tool" "$ROOTFS/usr/local/bin/$tool"
     chmod +x "$ROOTFS/usr/local/bin/$tool"
@@ -379,7 +382,33 @@ done
 
 ok "TajaOS modules installed"
 
-# ── Step 11: Rebuild initramfs with live-boot ──────────────
+# ── Step 11: Install AI Agent ─────────────────────────────
+log "Installing AI agent..."
+cp "$SCRIPT_DIR/taja-agent.py" "$ROOTFS/usr/local/bin/taja-agent"
+chmod +x "$ROOTFS/usr/local/bin/taja-agent"
+
+# Create systemd service for auto-start on tty1
+cat > "$ROOTFS/etc/systemd/system/taja-agent.service" << 'AGENTSVC'
+[Unit]
+Description=TajaOS AI Agent
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/taja-agent
+Restart=on-failure
+RestartSec=5
+WorkingDirectory=/root
+Environment=HOME=/root
+
+[Install]
+WantedBy=multi-user.target
+AGENTSVC
+
+chroot "$ROOTFS" /bin/bash -c "systemctl enable taja-agent.service 2>/dev/null || true"
+ok "AI agent installed and enabled for auto-start"
+
+# ── Step 12: Rebuild initramfs with live-boot ──────────────
 log "Rebuilding initramfs..."
 chroot "$ROOTFS" /bin/bash -c "update-initramfs -u -k all" || {
   warn "update-initramfs failed — checking /boot contents"
@@ -388,7 +417,7 @@ chroot "$ROOTFS" /bin/bash -c "update-initramfs -u -k all" || {
 }
 ok "Initramfs rebuilt"
 
-# ── Step 12: ISO directory structure ─────────────────────
+# ── Step 13: ISO directory structure ─────────────────────
 log "Creating ISO structure..."
 mkdir -p "$ISO_DIR/boot/grub"
 mkdir -p "$ISO_DIR/live"
@@ -402,12 +431,11 @@ cp "$ROOTFS/boot/vmlinuz-${KVER}"    "$ISO_DIR/boot/vmlinuz"
 cp "$ROOTFS/boot/initrd.img-${KVER}" "$ISO_DIR/boot/initrd.img"
 cp "$SCRIPT_DIR/boot/grub/grub.cfg"  "$ISO_DIR/boot/grub/grub.cfg"
 
-# ── Step 13: Squashfs root filesystem ─────────────────────
+# ── Step 14: Squashfs root filesystem ─────────────────────
 if ! $NO_SQUASH; then
   log "Creating squashfs (GZIP, ~5-10 min)..."
   mksquashfs "$ROOTFS" "$ISO_DIR/live/filesystem.squashfs" \
     -comp gzip \
-    -Xbcj x86 \
     -b 1M \
     -e boot \
     -noappend \
@@ -419,7 +447,7 @@ else
     die "No squashfs found! Run without --no-squash first."
 fi
 
-# ── Step 14: Build ISO with grub-mkrescue ─────────────────
+# ── Step 15: Build ISO with grub-mkrescue ─────────────────
 # grub-mkrescue automatically:
 #   - embeds GRUB modules (fixes echo.mod / chain.mod not found)
 #   - creates BIOS El Torito boot record
