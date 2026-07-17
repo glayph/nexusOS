@@ -165,6 +165,11 @@ set -o pipefail
   systemctl mask systemd-journald-audit.socket dev-hugepages.mount \
     sys-kernel-debug.mount 2>/dev/null || true
 
+  # Create systemd users/groups that tmpfiles expects (prevent errors in chroot/container)
+  id systemd-network &>/dev/null || useradd -r -s /usr/sbin/nologin systemd-network 2>/dev/null || true
+  getent group systemd-journal &>/dev/null || groupadd -r systemd-journal 2>/dev/null || true
+  id systemd-timesync &>/dev/null || useradd -r -s /usr/sbin/nologin systemd-timesync 2>/dev/null || true
+
   # Compress initramfs with xz (smaller = faster to load)
   echo "COMPRESS=xz" >> /etc/initramfs-tools/initramfs.conf
 

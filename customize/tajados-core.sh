@@ -96,7 +96,7 @@ config_list() {
     for f in "$CONFIG_DIR"/*.conf; do
       [[ -f "$f" ]] && echo "=== $(basename "$f" .conf) ===" && cat "$f"
     done
-  done
+  fi
 }
 
 config_validate() {
