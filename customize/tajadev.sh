@@ -22,7 +22,7 @@ dev_container_create() {
   elif [[ "$distro" == "debian" ]]; then
     debootstrap --arch=amd64 "$release" "/var/lib/machines/$name" http://deb.debian.org/debian/
   fi
-  systemd-machinectl enable "$name"
+  machinectl enable "$name"
   ok "Container '$name' created ($distro $release)"
 }
 
@@ -39,7 +39,7 @@ dev_vm_create() {
   ok "VM '$name' created ($ram MB, ${disk}G disk)"
 }
 
-dev_vm_start() { qemu-system-x86_64 -m "$2" -drive file="/var/lib/vms/$1.qcow2" -enable-kvm &; }
+dev_vm_start() { qemu-system-x86_64 -m "$2" -drive file="/var/lib/vms/$1.qcow2" -enable-kvm & }
 dev_vm_list() { ls -1 /var/lib/vms/ 2>/dev/null; }
 
 # Build environments

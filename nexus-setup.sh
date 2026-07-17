@@ -6,8 +6,6 @@ R=$(printf '\033[91m'); B=$(printf '\033[1m'); D=$(printf '\033[2m')
 N=$(printf '\033[0m')
 A_GUI=0; A_DM=""; A_USER=""
 
-PRE_INSTALLED=""
-
 menu() {
   whiptail --title "TajaOS Setup" --menu "$1" 20 60 "$2" "${@:3}" 3>&1 1>&2 2>&3
 }

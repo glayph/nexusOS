@@ -13,7 +13,7 @@ help:
 	@echo "  TAJAOS Build System"
 	@echo "  ─────────────────────────────────────────────"
 	@echo "  make install        Install build dependencies"
-  @echo "  make build          Build tajaos.iso"
+	@echo "  make build          Build tajaos.iso"
 	@echo "  make build CLEAN=1  Fresh build (delete rootfs)"
 	@echo "  make build FAST=1   Skip squashfs rebuild"
 	@echo "  make clean          Remove all build artifacts"
@@ -38,7 +38,7 @@ build:
 	fi
 
 clean:
-  @echo "[TAJAOS] Cleaning build artifacts..."
+	@echo "[TAJAOS] Cleaning build artifacts..."
 	@sudo rm -rf rootfs iso core.img bios.img efiboot.img tajaos.iso
 	@echo "[TAJAOS] Clean done."
 
@@ -54,7 +54,7 @@ flash:
 qemu:
 	@command -v qemu-system-x86_64 >/dev/null || (echo "Install: apt install qemu-system-x86"; exit 1)
 	@echo "[TAJAOS] Starting QEMU test..."
-  qemu-system-x86_64 \
+	qemu-system-x86_64 \
 	  -m 2048 \
 	  -cdrom tajaos.iso \
 	  -boot d \

@@ -39,8 +39,10 @@ pkg_cache_install() { dpkg -i "$CACHE_DIR"/*.deb 2>/dev/null && apt-get install 
 
 # Build from source
 pkg_build() {
-  local src="$1"
-  cd "$(mktemp -d)"
+  local src="$1" tmpdir
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "$tmpdir"' EXIT
+  cd "$tmpdir"
   git clone --depth=1 "$src" src
   cd src
   [[ -f Makefile ]] && make && make install

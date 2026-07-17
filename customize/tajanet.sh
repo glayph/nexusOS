@@ -67,7 +67,7 @@ dns_set() {
   [[ -z "$dns" ]] && { read -rp "DNS servers (space-separated): " dns; }
   nmcli conn mod "$(nmcli -t -f NAME,DEVICE conn show --active | head -1 | cut -d: -f1)" ipv4.dns "$dns"
   nmcli conn up "$(nmcli -t -f NAME,DEVICE conn show --active | head -1 | cut -d: -f1)"
-  echo "nameserver $dns" > /etc/resolv.conf
+  > /etc/resolv.conf; for ns in $dns; do echo "nameserver $ns" >> /etc/resolv.conf; done
   ok "DNS set to: $dns"
 }
 

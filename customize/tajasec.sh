@@ -252,6 +252,7 @@ tamper_checksums() {
       [[ -f "$db" ]] || die "Run init first"
       local changes=0
       while IFS=' ' read -r sum file; do
+        [[ ! -f "$file" ]] && { warn "Deleted: $file"; ((changes++)); continue; }
         local cur=$(sha256sum "$file")
         [[ "$sum" != "${cur%% *}" ]] && { warn "Changed: $file"; ((changes++)); }
       done < "$db"
