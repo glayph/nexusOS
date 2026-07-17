@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""Nexus OS — First Boot Welcome Wizard"""
+import os, sys, subprocess, time
+
+C="\033[96m"; G="\033[92m"; Y="\033[93m"; N="\033[0m"; B="\033[1m"
+
+def ask(prompt, default=""):
+    try:
+        val = input(f"  {C}→{N} {prompt}{f' [{default}]' if default else ''}: ").strip()
+        return val or default
+    except (EOFError, KeyboardInterrupt):
+        return default
+
+def run(cmd):
+    return subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout.strip()
+
+print(f"""
+{B}{C}
+  ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗
+  ████╗  ██║██╔════╝╚██╗██╔╝██║   ██║██╔════╝
+  ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗
+  ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║
+  ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║
+{N}
+  {B}Welcome to Nexus OS 1.1 — First Boot Setup{N}
+""")
+
+print(f"{C}── Step 1: System Identity ─────────────────────{N}")
+hostname = ask("Hostname", "nexus")
+if hostname and hostname != run("hostname"):
+    subprocess.run(f"hostnamectl set-hostname {hostname}", shell=True)
+    print(f"  {G}✅ Hostname set to: {hostname}{N}")
+
+print(f"\n{C}── Step 2: AI Agent Configuration ──────────────{N}")
+print(f"  Providers: {B}1{N}) Anthropic (default)  {B}2{N}) OpenAI  {B}3{N}) Local (Ollama)  {B}4{N}) External  {B}5{N}) Skip")
+choice = ask("Select provider", "1")
+
+conf_path = "/etc/nexus/agent.conf"
+providers = {"1":"anthropic","2":"openai","3":"local","4":"external","5":None}
+provider = providers.get(choice, "anthropic")
+
+if provider:
+    conf = open(conf_path).read() if os.path.exists(conf_path) else ""
+    conf = "\n".join(l for l in conf.split("\n") if not l.startswith("AGENT_PROVIDER="))
+    conf += f"\nAGENT_PROVIDER={provider}\n"
+
+    if provider in ("anthropic","openai"):
+        api_key = ask(f"{'Anthropic' if provider=='anthropic' else 'OpenAI'} API key (sk-...)")
+        if api_key.startswith("sk-"):
+            os.makedirs("/etc/nexus", exist_ok=True)
+            open("/etc/nexus/api.key","w").write(api_key)
+            os.chmod("/etc/nexus/api.key", 0o600)
+            print(f"  {G}✅ API key saved to /etc/nexus/api.key{N}")
+        else:
+            print(f"  {Y}⚠  No key saved. Add later: echo 'sk-...' > /etc/nexus/api.key{N}")
+
+    elif provider == "local":
+        model = ask("Ollama model", "llama3")
+        conf += f"LOCAL_MODEL={model}\nLOCAL_ENDPOINT=http://localhost:11434/api/chat\n"
+        print(f"  {G}✅ Local model: {model}{N}")
+
+    elif provider == "external":
+        cmd = ask("External agent command path", "/usr/bin/openclaw")
+        conf += f"EXTERNAL_AGENT_CMD={cmd}\n"
+        print(f"  {G}✅ External agent: {cmd}{N}")
+
+    os.makedirs("/etc/nexus", exist_ok=True)
+    open(conf_path,"w").write(conf)
+
+print(f"\n{C}── Step 3: Timezone ─────────────────────────────{N}")
+tz = ask("Timezone", "UTC")
+subprocess.run(f"timedatectl set-timezone {tz} 2>/dev/null || true", shell=True)
+print(f"  {G}✅ Timezone: {tz}{N}")
+
+print(f"\n{C}── Step 4: Install optional packages ───────────{N}")
+print("  Examples: git, tmux, python3-numpy, docker.io, vim")
+pkgs = ask("Packages to install (space-separated, or Enter to skip)")
+if pkgs.strip():
+    print(f"  Installing {pkgs}...")
+    subprocess.run(f"apt-get update -qq && apt-get install -y --no-install-recommends {pkgs}", shell=True)
+    print(f"  {G}✅ Packages installed{N}")
+
+# Mark first boot done
+os.makedirs("/etc/nexus", exist_ok=True)
+open("/etc/nexus/.setup-done","w").write(time.strftime("%Y-%m-%d %H:%M:%S"))
+
+print(f"""
+{G}{B}✅ Setup complete!{N}
+
+  {C}Commands to know:{N}
+    nexus           → Launch AI agent
+    nexus-doctor    → System health check
+    nexus-monitor   → Live dashboard
+    nexus-pkg       → Package manager
+    nexus-skill     → Plugin manager
+
+  {Y}Type 'nexus' to start the AI agent.{N}
+""")

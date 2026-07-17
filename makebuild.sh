@@ -17,9 +17,7 @@ for arg in "$@"; do
     --clean)     CLEAN=true ;;
     --no-squash) NO_SQUASH=true ;;
     --output)    OUTPUT_DIR="$2"; shift ;;
-    --help)
-      echo "Usage: sudo ./makebuild.sh [--clean] [--no-squash] [--output DIR]"
-      exit 0 ;;
+    --help)      echo "Usage: sudo ./makebuild.sh [--clean] [--no-squash] [--output DIR]"; exit 0 ;;
   esac
 done
 
@@ -41,14 +39,15 @@ ok "Preflight checks passed"
 
 # ── Step 1: Clean ──────────────────────────────────────────
 if $CLEAN; then
-  warn "Removing existing rootfs and ISO..."
-  rm -rf "$ROOTFS" "$ISO_DIR"
+  warn "Removing existing rootfs..."
+  rm -rf "$ROOTFS" "$ISO_DIR" core.img bios.img efiboot.img
 fi
 
 # ── Step 2: Bootstrap ─────────────────────────────────────
 if [[ ! -d "$ROOTFS/bin" ]]; then
   log "Bootstrapping Ubuntu 24.04 Noble (minbase)..."
-  debootstrap --arch=amd64 --variant=minbase noble "$ROOTFS" http://archive.ubuntu.com/ubuntu/
+  debootstrap --arch=amd64 --variant=minbase noble "$ROOTFS" \
+    http://archive.ubuntu.com/ubuntu/ 2>&1 | grep -E "^[EW]:" || true
   ok "Bootstrap done"
 else
   warn "Rootfs exists — skipping (use --clean to rebuild)"
@@ -61,7 +60,7 @@ deb http://archive.ubuntu.com/ubuntu noble-updates main restricted universe
 deb http://security.ubuntu.com/ubuntu noble-security main restricted universe
 SOURCES
 
-# ── Step 4: Mount virtual filesystems ─────────────────────
+# ── Step 4: Mount ─────────────────────────────────────────
 mountpoint -q "$ROOTFS/proc" || mount --bind /proc "$ROOTFS/proc"
 mountpoint -q "$ROOTFS/sys"  || mount --bind /sys  "$ROOTFS/sys"
 mountpoint -q "$ROOTFS/dev"  || mount --bind /dev  "$ROOTFS/dev"
@@ -128,7 +127,34 @@ trap tajaos_cleanup EXIT ERR
 
   echo root:tajaos | chpasswd
 
-  # Clean to save space
+# ── Step 6: AGGRESSIVE driver removal ─────────────────────
+log "Removing unnecessary kernel modules & files..."
+chroot "$ROOTFS" /bin/bash -c "
+  KVER=\$(ls /boot/vmlinuz-* | sort -V | tail -1 | sed 's/.*vmlinuz-//')
+  echo \"Kernel: \$KVER\"
+  cd /lib/modules/\$KVER/kernel
+
+  # Remove unnecessary driver categories
+  rm -rf drivers/media          2>/dev/null || true  # Video capture
+  rm -rf drivers/staging        2>/dev/null || true  # Staging/experimental
+  rm -rf drivers/gpu/drm        2>/dev/null || true  # GPU/DRM (VM has virtio)
+  rm -rf drivers/bluetooth      2>/dev/null || true  # Bluetooth
+  rm -rf drivers/infiniband     2>/dev/null || true  # InfiniBand
+  rm -rf drivers/isdn           2>/dev/null || true  # ISDN
+  rm -rf drivers/atm            2>/dev/null || true  # ATM networking
+  rm -rf drivers/nfc            2>/dev/null || true  # NFC
+  rm -rf drivers/iio            2>/dev/null || true  # Industrial I/O
+  rm -rf drivers/w1             2>/dev/null || true  # 1-wire bus
+  rm -rf drivers/hid            2>/dev/null || true  # HID (keyboard/mouse handled by VirtIO)
+  rm -rf drivers/parport        2>/dev/null || true  # Parallel port
+  rm -rf sound                  2>/dev/null || true  # Audio
+  rm -rf net/wireless           2>/dev/null || true  # WiFi (add back if needed)
+  rm -rf net/bluetooth          2>/dev/null || true  # Bluetooth networking
+
+  depmod -a \$KVER 2>/dev/null || true
+  echo 'Modules cleaned.'
+
+  # Remove large unnecessary files
   apt-get clean
   apt-get autoremove -y --purge 2>/dev/null || true
   rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
@@ -175,23 +201,102 @@ trap tajaos_cleanup EXIT ERR
 
   echo '[TAJAOS] Packages installed and cleaned'
 "
-ok "Packages done"
+ok "Driver removal and cleanup done"
 
-# ── Step 6: Custom packages ────────────────────────────────
+# ── Step 7: Custom packages from packages.list ────────────
 if [[ -f "$SCRIPT_DIR/customize/packages.list" ]]; then
-  PKGS=$(grep -v '^\s*#' "$SCRIPT_DIR/customize/packages.list" \
-       | grep -v '^\s*$' | tr '\n' ' ')
+  PKGS=$(grep -v '^\s*#' "$SCRIPT_DIR/customize/packages.list" | grep -v '^\s*$' | tr '\n' ' ')
   if [[ -n "$PKGS" ]]; then
     log "Installing custom packages: $PKGS"
     chroot "$ROOTFS" /bin/bash -c "
       apt-get update -qq
-      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends $PKGS
+      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends $PKGS \
+        2>&1 | grep -E '^(Setting up|E:)' || true
       apt-get clean && rm -rf /var/lib/apt/lists/*
     "
   fi
 fi
 
-# ── Step 7: System identity ───────────────────────────────
+# ── Step 8: Install Nexus OS framework ────────────────────
+log "Installing Nexus OS v1.1 framework..."
+
+# Directory structure
+mkdir -p "$ROOTFS/opt/nexus/skills"
+mkdir -p "$ROOTFS/opt/nexus/themes"
+mkdir -p "$ROOTFS/etc/nexus"
+mkdir -p "$ROOTFS/var/log/nexus"
+mkdir -p "$ROOTFS/var/backups"
+
+# Main agent
+cp "$SCRIPT_DIR/nexus-agent.py" "$ROOTFS/usr/local/bin/nexus-agent.py"
+chmod +x "$ROOTFS/usr/local/bin/nexus-agent.py"
+
+# Skills
+for f in "$SCRIPT_DIR/skills/"*.py; do
+  [[ -f "$f" ]] && cp "$f" "$ROOTFS/opt/nexus/skills/"
+done
+
+# Utility scripts
+for f in "$SCRIPT_DIR/bin/"*; do
+  [[ -f "$f" ]] && cp "$f" "$ROOTFS/usr/local/bin/" && chmod +x "$ROOTFS/usr/local/bin/$(basename $f)"
+done
+
+# Config files
+[[ -f "$SCRIPT_DIR/config/agent.conf"  ]] && cp "$SCRIPT_DIR/config/agent.conf"  "$ROOTFS/etc/nexus/"
+[[ -f "$SCRIPT_DIR/config/config.conf" ]] && cp "$SCRIPT_DIR/config/config.conf" "$ROOTFS/etc/nexus/"
+mkdir -p "$ROOTFS/etc/nexus/themes"
+[[ -d "$SCRIPT_DIR/config/themes" ]] && cp -r "$SCRIPT_DIR/config/themes/". "$ROOTFS/etc/nexus/themes/"
+
+# Nexus main launcher
+cat > "$ROOTFS/usr/local/bin/nexus" << 'LAUNCHER'
+#!/bin/bash
+export TERM=linux
+export PYTHONUNBUFFERED=1
+[ -f /etc/nexus/api.key ] && export ANTHROPIC_API_KEY=$(cat /etc/nexus/api.key)
+exec /usr/local/bin/nexus-agent.py "$@"
+LAUNCHER
+chmod +x "$ROOTFS/usr/local/bin/nexus"
+
+# os doctor shortcut
+ln -sf /usr/local/bin/nexus-doctor "$ROOTFS/usr/local/bin/os"
+cat >> "$ROOTFS/usr/local/bin/os" << 'OSDOC' 2>/dev/null || true
+OSDOC
+
+# Bash completion for nexus commands
+cat > "$ROOTFS/etc/bash_completion.d/nexus" << 'COMPLETION'
+_nexus_complete() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local cmds="status sysinfo help clear memory skills exit"
+  COMPREPLY=($(compgen -W "$cmds" -- "$cur"))
+}
+_nexuspkg_complete() {
+  COMPREPLY=($(compgen -W "install remove search list update upgrade info clean autoremove" -- "${COMP_WORDS[COMP_CWORD]}"))
+}
+complete -F _nexus_complete nexus
+complete -F _nexuspkg_complete nexus-pkg
+COMPLETION
+
+# Default tmux config
+cat > "$ROOTFS/etc/tmux.conf" << 'TMUX'
+set -g default-terminal "screen-256color"
+set -g history-limit 5000
+set -g mouse on
+set -g status-style 'bg=colour234 fg=colour136'
+set -g status-left '#[fg=colour69][nexus] '
+set -g status-right '#[fg=colour136]%H:%M %d-%b'
+bind | split-window -h
+bind - split-window -v
+bind r source-file /etc/tmux.conf
+TMUX
+
+# Customize files
+[[ -f "$SCRIPT_DIR/customize/startup.sh"         ]] && cp "$SCRIPT_DIR/customize/startup.sh"       "$ROOTFS/etc/nexus/"
+[[ -f "$SCRIPT_DIR/customize/agent-prompt.txt"   ]] && cp "$SCRIPT_DIR/customize/agent-prompt.txt" "$ROOTFS/etc/nexus/agent-prompt.txt"
+[[ -f "$SCRIPT_DIR/customize/motd.txt"           ]] && cp "$SCRIPT_DIR/customize/motd.txt"         "$ROOTFS/etc/motd" || true
+
+ok "Nexus OS framework installed"
+
+# ── Step 9: System identity ───────────────────────────────
 log "Configuring system identity..."
 echo "tajaos" > "$ROOTFS/etc/hostname"
 cat > "$ROOTFS/etc/hosts" << 'HOSTS'
@@ -209,7 +314,21 @@ PRETTY_NAME="TajaOS 2.0"
 BUILD_DATE=$(date +%Y-%m-%d)
 OSREL
 
-# Auto-login on tty1
+# Set default MOTD if no custom one
+if [[ ! -f "$SCRIPT_DIR/customize/motd.txt" ]]; then
+  cat > "$ROOTFS/etc/motd" << 'MOTD'
+
+  ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗  ██████╗ ███████╗
+  ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗ ██║   ██║███████╗
+  ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║ ╚██████╔╝███████║
+
+  Nexus OS 1.1  |  'nexus' → AI agent  |  'nexus-doctor' → health check
+
+MOTD
+fi
+
+# ── Step 10: Auto-login & auto-launch ─────────────────────
+log "Configuring auto-login on tty1..."
 mkdir -p "$ROOTFS/etc/systemd/system/getty@tty1.service.d"
 cat > "$ROOTFS/etc/systemd/system/getty@tty1.service.d/autologin.conf" << 'GETTY'
 [Service]
@@ -227,6 +346,7 @@ else
 ╰──────────────────────────────────────╯
 MOTD
 fi
+PROFILE
 
 # Install custom startup script
 if [[ -f "$SCRIPT_DIR/customize/startup.sh" ]]; then
@@ -256,34 +376,19 @@ fi
 # ── Step 8: Shell environment ────────────────────────────
 log "Configuring shell..."
 cat > "$ROOTFS/root/.bashrc" << 'BASHRC'
-# ── prompt ──────────────────────────────────────────────
-PS1='\[\033[96m\]\u@\h\[\033[0m\]:\[\033[97m\]\w\[\033[0m\]\$ '
-
-# ── ls ──────────────────────────────────────────────────
-eval "$(dircolors -b 2>/dev/null)"
-alias ls='ls --color=auto'
-alias ll='ls -lh'
-alias la='ls -A'
-alias l='ls -CF'
-
-# ── utils ───────────────────────────────────────────────
-alias grep='grep --color=auto'
-alias h='history'
-alias q='exit'
-alias ..='cd ..'
+# Nexus OS .bashrc
+source /etc/bash_completion 2>/dev/null || true
+source /etc/bash_completion.d/nexus 2>/dev/null || true
+export HISTSIZE=5000
+export HISTFILESIZE=10000
+alias ll='ls -lah'
+alias la='ls -la'
 alias cls='clear'
-alias ip='ip -c'
-alias df='df -h'
-alias du='du -sh'
-alias free='free -h'
-alias nano='nano -l'
-
-# ── env ─────────────────────────────────────────────────
-export EDITOR=nano
-
-# ── completion ──────────────────────────────────────────
-[ -f /usr/share/bash-completion/bash_completion ] && \
-  . /usr/share/bash-completion/bash_completion
+alias monitor='nexus-monitor'
+alias health='nexus-doctor'
+alias pkg='nexus-pkg'
+alias skill='nexus-skill'
+PS1='\[\033[96m\]nexus \[\033[92m\]\w\[\033[0m\] ❯ '
 BASHRC
 
 cp "$ROOTFS/root/.bashrc" "$ROOTFS/root/.bash_profile"
@@ -362,10 +467,13 @@ log "Creating ISO structure..."
 mkdir -p "$ISO_DIR/boot/grub"
 mkdir -p "$ISO_DIR/live"
 
-KVER=$(ls "$ROOTFS/boot/vmlinuz-"* 2>/dev/null | sort -V | tail -1 \
-       | sed 's/.*vmlinuz-//')
+# ── Step 12: ISO structure ────────────────────────────────
+log "Building ISO structure..."
+mkdir -p "$ISO_DIR/boot/grub" "$ISO_DIR/EFI/boot" "$ISO_DIR/live"
+
+KVER=$(ls "$ROOTFS/boot/vmlinuz-"* 2>/dev/null | sort -V | tail -1 | sed 's/.*vmlinuz-//')
 [[ -z "$KVER" ]] && die "No kernel found in $ROOTFS/boot/"
-log "Kernel: linux-$KVER"
+log "Kernel: $KVER"
 
 cp "$ROOTFS/boot/vmlinuz-${KVER}"    "$ISO_DIR/boot/vmlinuz"
 cp "$ROOTFS/boot/initrd.img-${KVER}" "$ISO_DIR/boot/initrd.img"
@@ -373,19 +481,14 @@ cp "$SCRIPT_DIR/boot/grub/grub.cfg"  "$ISO_DIR/boot/grub/grub.cfg"
 
 # ── Step 13: Squashfs root filesystem ─────────────────────
 if ! $NO_SQUASH; then
-  log "Creating squashfs (GZIP, ~5-10 min)..."
+  log "Creating squashfs (XZ compression)..."
   mksquashfs "$ROOTFS" "$ISO_DIR/live/filesystem.squashfs" \
-    -comp gzip \
-    -Xbcj x86 \
-    -b 1M \
-    -e boot \
-    -noappend \
-    | tail -3
+    -comp xz -Xbcj x86 -b 1M \
+    -e boot -noappend \
+    2>&1 | tail -3
   ok "Squashfs: $(du -sh $ISO_DIR/live/filesystem.squashfs | cut -f1)"
 else
-  warn "Skipping squashfs rebuild (--no-squash)"
-  [[ ! -f "$ISO_DIR/live/filesystem.squashfs" ]] && \
-    die "No squashfs found! Run without --no-squash first."
+  warn "Skipping squashfs (--no-squash)"
 fi
 
 # ── Step 14: Build ISO with grub-mkrescue ─────────────────
@@ -405,9 +508,8 @@ grub-mkrescue \
   -publisher "TajaOS Project" \
   || die "grub-mkrescue failed"
 
-# ── Done ─────────────────────────────────────────────────
 echo ""
-ok "BUILD COMPLETE!"
+ok "BUILD COMPLETE — Nexus OS v1.1"
 echo ""
 echo "  ISO    : $OUTPUT_ISO"
 echo "  Size   : $(du -sh $OUTPUT_ISO | cut -f1)"

@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - boot/**
-      - customize/**
-      - makebuild.sh
-      - Makefile
-      - install-deps.sh
-      - nexus-setup.sh
-      - .github/**
+      - 'nexus-agent.py'
+      - 'boot/**'
+      - 'skills/**'
+      - 'bin/**'
+      - 'config/**'
+      - 'customize/**'
+      - 'makebuild.sh'
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: 120
 
     steps:
       - name: Checkout
@@ -36,15 +36,15 @@ jobs:
       - name: Install dependencies
         run: sudo bash install-deps.sh
 
-      - name: Build nexus.iso
-        run: sudo bash makebuild.sh
+      - name: Build nexus.iso v1.1
+        run: sudo bash makebuild.sh --output ${{ github.workspace }}
 
-      - name: Show ISO info
+      - name: ISO info
         run: |
           ls -lh nexus.iso
           sha256sum nexus.iso | tee SHA256SUMS
 
-      - name: Upload to GitHub Release
+      - name: Upload to Release v1.1
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v2.0.${{ github.run_number }}

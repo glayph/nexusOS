@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""Nexus OS — Plugin/Skill Manager"""
+import os, sys, importlib.util, subprocess
+
+C="\033[96m"; G="\033[92m"; Y="\033[93m"; R="\033[91m"; N="\033[0m"; B="\033[1m"
+SKILLS_DIR = "/opt/nexus/skills"
+
+def list_skills():
+    print(f"\n{B}{C}Installed Skills:{N}\n")
+    for f in sorted(os.listdir(SKILLS_DIR)):
+        if not f.endswith(".py") or f.startswith("_"): continue
+        name = f[:-3]
+        spec = importlib.util.spec_from_file_location(name, f"{SKILLS_DIR}/{f}")
+        mod  = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(mod)
+            ver  = getattr(mod, "VERSION", "?")
+            desc = getattr(mod, "NAME", name)
+            cnt  = len(getattr(mod, "SKILLS", {}))
+            print(f"  {G}✅{N}  {name:<16} v{ver}  {cnt} skills  — {desc}")
+        except Exception as e:
+            print(f"  {R}❌{N}  {name:<16} Error: {e}")
+    print()
+
+def show_skill(name):
+    path = f"{SKILLS_DIR}/{name}.py"
+    if not os.path.exists(path):
+        print(f"{R}Skill not found: {name}{N}"); return
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod  = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    skills = getattr(mod, "SKILLS", {})
+    print(f"\n{B}{C}Skill: {name}{N}\n")
+    for key, val in skills.items():
+        desc = val[0] if isinstance(val, tuple) else str(val)
+        print(f"  {C}•{N} {key:<28} {desc}")
+    print()
+
+def install_skill(url):
+    name = os.path.basename(url).replace(".py","")
+    dest = f"{SKILLS_DIR}/{name}.py"
+    print(f"Installing skill: {name}...")
+    subprocess.run(f"curl -fsSL {url} -o {dest}", shell=True)
+    if os.path.exists(dest):
+        print(f"{G}✅ Installed: {name}{N}")
+    else:
+        print(f"{R}❌ Failed to install{N}")
+
+def remove_skill(name):
+    path = f"{SKILLS_DIR}/{name}.py"
+    if os.path.exists(path):
+        os.remove(path)
+        print(f"{G}✅ Removed: {name}{N}")
+    else:
+        print(f"{R}Not found: {name}{N}")
+
+HELP = f"""
+{B}{C}nexus-skill{N} — Nexus OS Plugin Manager
+
+  {B}Usage:{N}
+    nexus-skill list              List all installed skills
+    nexus-skill show  <name>      Show skill commands
+    nexus-skill install <url>     Install skill from URL
+    nexus-skill remove  <name>    Remove a skill
+"""
+
+if len(sys.argv) < 2: print(HELP); sys.exit(0)
+
+cmd = sys.argv[1]
+arg = sys.argv[2] if len(sys.argv) > 2 else ""
+
+{"list": list_skills, "show": lambda: show_skill(arg),
+ "install": lambda: install_skill(arg), "remove": lambda: remove_skill(arg)
+}.get(cmd, lambda: print(HELP))()
