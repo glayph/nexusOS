@@ -315,6 +315,8 @@ chmod +x "$ROOTFS/usr/bin/taja-setup"
 
 # ── Step 10: Install TajaOS System Modules ───────────────
 log "Installing TajaOS system modules..."
+# Create directory on HOST before copying scripts into rootfs
+mkdir -p "$ROOTFS/usr/local/lib/tajados"
 for script in "$SCRIPT_DIR"/customize/taja*.sh; do
   [[ -f "$script" ]] || continue
   scriptname=$(basename "$script" .sh)
@@ -438,9 +440,10 @@ cp "$SCRIPT_DIR/boot/grub/grub.cfg"  "$ISO_DIR/boot/grub/grub.cfg"
 
 # ── Step 14: Squashfs root filesystem ─────────────────────
 if ! $NO_SQUASH; then
-  log "Creating squashfs (GZIP, ~5-10 min)..."
+  log "Creating squashfs (XZ, ~15-20 min, much smaller output)..."
   mksquashfs "$ROOTFS" "$ISO_DIR/live/filesystem.squashfs" \
-    -comp gzip \
+    -comp xz \
+    -Xbcj x86 \
     -b 1M \
     -e boot \
     -noappend \
